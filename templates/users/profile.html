@@ -1,0 +1,391 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ profile_user.username }} — Profile{% endblock %}
+
+{% block content %}
+
+<!-- Profile Hero -->
+<div class="profile-hero">
+  <div class="container">
+    <div class="profile-card">
+      <div style="position:relative;flex-shrink:0">
+        <div class="profile-avatar">
+          {% if profile_user.avatar %}
+            <img src="{{ profile_user.avatar.url }}" alt="{{ profile_user.username }}" />
+          {% else %}
+            {{ profile_user.username|first|upper }}
+          {% endif %}
+        </div>
+        {% if request.user == profile_user %}
+          <a href="{% url 'users:profile_edit' %}" style="position:absolute;bottom:0;right:0;width:30px;height:30px;background:var(--accent);border-radius:50%;display:grid;place-items:center;border:2px solid var(--white);color:white;font-size:0.8rem" title="Change photo">✏</a>
+        {% endif %}
+      </div>
+
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+          <div class="profile-name">{{ profile_user.get_full_name|default:profile_user.username }}</div>
+          {% if profile_user.phone_verified %}
+            <span class="verified-badge">✓ Verified</span>
+          {% else %}
+            <span class="unverified-badge">Unverified</span>
+          {% endif %}
+          {% if profile_user.two_factor_enabled %}
+            <span class="badge badge--blue" style="font-size:0.65rem">🔐 2FA</span>
+          {% endif %}
+          {% if profile_user.preferred_language == 'hi' %}
+            <span class="badge badge--gray" style="font-size:0.65rem">🌐 Hindi</span>
+          {% endif %}
+        </div>
+        <span class="profile-role profile-role--{{ profile_user.role }}">{{ profile_user.get_role_display }}</span>
+        {% if profile_user.city %}
+          <div style="color:var(--text-muted);font-size:0.875rem;margin-top:8px">📍 {{ profile_user.city }}{% if profile_user.state %}, {{ profile_user.state }}{% endif %}</div>
+        {% endif %}
+        {% if profile_user.bio %}
+          <p style="color:var(--text-secondary);margin-top:10px;max-width:500px;font-size:0.9rem">{{ profile_user.bio }}</p>
+        {% endif %}
+        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          {% if profile_user.whatsapp_no and request.user != profile_user %}
+            <a href="https://wa.me/{{ profile_user.whatsapp_no|cut:'+' }}" target="_blank" class="contact-btn contact-btn--wa">
+              <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.997 0C5.375 0 0 5.376 0 12c0 2.116.554 4.099 1.523 5.822L0 24l6.335-1.496A11.955 11.955 0 0012 24c6.624 0 12-5.376 12-12S18.621 0 11.997 0zm.003 21.818a9.815 9.815 0 01-5.001-1.368l-.359-.213-3.761.888.937-3.668-.234-.376A9.844 9.844 0 012.18 12c0-5.413 4.407-9.818 9.82-9.818 5.414 0 9.82 4.405 9.82 9.818 0 5.414-4.406 9.818-9.82 9.818z"/></svg>
+              WhatsApp
+            </a>
+          {% endif %}
+          {% if profile_user.phone and request.user != profile_user %}
+            <a href="tel:{{ profile_user.phone }}" class="contact-btn contact-btn--phone">
+              📞 Call
+            </a>
+          {% endif %}
+          {% if profile_user.email and request.user != profile_user %}
+            <a href="mailto:{{ profile_user.email }}" class="contact-btn contact-btn--email">
+              ✉ Email
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if request.user == profile_user %}
+        <div style="margin-left:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+          <a href="{% url 'users:profile_edit' %}" class="btn btn--outline btn--sm">✏ Edit Profile</a>
+          {% if not profile_user.phone_verified %}
+            <a href="{% url 'users:verify_phone' %}" class="btn btn--sm" style="background:rgba(245,158,11,0.15);color:var(--warn);border:1px solid rgba(245,158,11,0.3)">⚠ Verify Phone</a>
+          {% endif %}
+          {% if profile_user.is_provider %}
+            <a href="{% url 'services:service_create' %}" class="btn btn--primary btn--sm">+ Add Service</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Profile Tabs -->
+<div class="profile-tabs-bar">
+  <div class="container">
+    <div class="profile-tabs">
+      <a href="?tab=overview" class="profile-tab {% if active_tab == 'overview' %}active{% endif %}">Overview</a>
+      {% if request.user == profile_user %}
+        <a href="?tab=activity" class="profile-tab {% if active_tab == 'activity' %}active{% endif %}">Activity</a>
+        <a href="?tab=security" class="profile-tab {% if active_tab == 'security' %}active{% endif %}">Security</a>
+        <a href="?tab=settings" class="profile-tab {% if active_tab == 'settings' %}active{% endif %}">Account Settings</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container section">
+
+  <!-- ── TAB: Overview ── -->
+  {% if active_tab == 'overview' %}
+  <div style="display:grid;grid-template-columns:{% if services %}1fr 300px{% else %}1fr{% endif %};gap:32px;align-items:start">
+    <div>
+      {% if services %}
+        <h2 class="section__title" style="margin-bottom:20px">Services ({{ services.count }})</h2>
+        <div class="grid grid--2">
+          {% for service in services %}
+            <a href="{% url 'services:service_detail' service.slug %}" class="card" style="display:block;text-decoration:none">
+              <div class="card__image">
+                {% if service.image %}
+                  <img src="{{ service.image.url }}" alt="{{ service.title }}" loading="lazy" />
+                {% else %}
+                  <div class="card__image-placeholder">{{ service.category.icon|default:'🔧' }}</div>
+                {% endif %}
+              </div>
+              <div class="card__body">
+                <div class="card__category">{{ service.category.name }}</div>
+                <div class="card__title">{{ service.title }}</div>
+                <div class="card__meta">
+                  <span class="card__price">₹{{ service.price }}</span>
+                  <span class="card__location">{{ service.city }}</span>
+                  <span style="color:var(--text-muted);font-size:0.75rem">👁 {{ service.views_count }} views</span>
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if reviews %}
+        <h2 class="section__title" style="margin-top:36px;margin-bottom:20px">Reviews Given</h2>
+        {% for review in reviews %}
+          <div class="review-card">
+            <div class="review-card__header">
+              <div class="review-avatar">{{ review.service.title|first|upper }}</div>
+              <div>
+                <div class="review-name">{{ review.service.title }}</div>
+                <div class="review-date">{{ review.created_at|date:"M d, Y" }}</div>
+              </div>
+              <div class="stars" style="margin-left:auto">
+                {% for i in "12345" %}
+                  <span class="star {% if forloop.counter > review.rating %}star--empty{% endif %}">★</span>
+                {% endfor %}
+              </div>
+            </div>
+            {% if review.comment %}
+              <div class="review-comment">{{ review.comment }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% if not services and not reviews %}
+        <div class="empty-state">
+          <div class="empty-state__icon">📋</div>
+          <div class="empty-state__title">Nothing here yet</div>
+          <div class="empty-state__desc">
+            {% if profile_user.is_provider %}Start by adding your first service.{% else %}Browse services and leave your first review.{% endif %}
+          </div>
+          <a href="{% if profile_user.is_provider %}{% url 'services:service_create' %}{% else %}{% url 'services:service_list' %}{% endif %}" class="btn btn--primary">
+            {% if profile_user.is_provider %}Add Service{% else %}Browse Services{% endif %}
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div>
+      <div class="card" style="padding:20px;margin-bottom:16px">
+        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:16px;font-weight:700">Account Info</div>
+        {% if profile_user.phone %}
+          <div style="margin-bottom:12px;font-size:0.875rem;display:flex;align-items:center;gap:8px">
+            📞 {{ profile_user.phone }}
+            {% if profile_user.phone_verified %}<span class="verified-badge">✓</span>{% endif %}
+          </div>
+        {% endif %}
+        {% if profile_user.whatsapp_no %}
+          <div style="margin-bottom:12px;font-size:0.875rem;display:flex;align-items:center;gap:8px">
+            <span style="color:#25D366">📱</span>
+            {% if request.user != profile_user %}
+              <a href="https://wa.me/{{ profile_user.whatsapp_no|cut:'+' }}" target="_blank" style="color:#25D366;font-weight:600">WhatsApp</a>
+            {% else %}
+              {{ profile_user.whatsapp_no }}
+            {% endif %}
+          </div>
+        {% endif %}
+        {% if profile_user.email and request.user == profile_user %}
+          <div style="margin-bottom:12px;font-size:0.875rem;color:var(--text-secondary)">✉ {{ profile_user.email }}</div>
+        {% endif %}
+        <div style="margin-bottom:12px;font-size:0.875rem;color:var(--text-muted)">📅 Joined {{ profile_user.date_joined|date:"M Y" }}</div>
+        {% if services %}
+          <div style="padding-top:14px;border-top:1px solid var(--border)">
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;font-weight:700">Services</div>
+            <div style="font-family:var(--font-head);font-size:2rem;font-weight:800;color:var(--accent)">{{ services.count }}</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: Activity ── -->
+  {% elif active_tab == 'activity' %}
+  <div style="max-width:680px">
+    <h2 class="section__title" style="margin-bottom:20px">Your Activity</h2>
+
+    {% if services %}
+    <div class="card" style="padding:20px;margin-bottom:20px">
+      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:14px;font-weight:700">My Services</div>
+      {% for service in services %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:12px">
+          <div>
+            <div style="font-weight:600;font-size:0.9rem">{{ service.title }}</div>
+            <div style="font-size:0.8rem;color:var(--text-muted)">{{ service.category.name }} · {{ service.city }}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:0.8rem;color:var(--text-muted)">👁 {{ service.views_count }} views</div>
+            <a href="{% url 'services:service_detail' service.slug %}" style="font-size:0.78rem;color:var(--accent)">View →</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if received_reviews %}
+    <div class="card" style="padding:20px;margin-bottom:20px">
+      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:14px;font-weight:700">Reviews Received</div>
+      {% for review in received_reviews %}
+        <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center;font-size:0.75rem;font-weight:700;color:var(--accent)">{{ review.reviewer.username|first|upper }}</div>
+            <div style="font-size:0.85rem;font-weight:600">{{ review.reviewer.username }}</div>
+            <div class="stars" style="margin-left:auto;font-size:0.85rem">
+              {% for i in "12345" %}<span class="star {% if forloop.counter > review.rating %}star--empty{% endif %}">★</span>{% endfor %}
+            </div>
+          </div>
+          <div style="font-size:0.82rem;color:var(--text-muted)">on <em>{{ review.service.title }}</em> · {{ review.created_at|date:"M d, Y" }}</div>
+          {% if review.comment %}<div style="margin-top:6px;font-size:0.85rem;color:var(--text-secondary)">{{ review.comment }}</div>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if reviews %}
+    <div class="card" style="padding:20px">
+      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:14px;font-weight:700">Reviews I Gave ({{ given_reviews_count }})</div>
+      {% for review in reviews %}
+        <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:0.85rem;font-weight:600">{{ review.service.title }}</div>
+            <div class="stars" style="font-size:0.85rem">
+              {% for i in "12345" %}<span class="star {% if forloop.counter > review.rating %}star--empty{% endif %}">★</span>{% endfor %}
+            </div>
+          </div>
+          <div style="font-size:0.78rem;color:var(--text-muted)">{{ review.created_at|date:"M d, Y" }}</div>
+          {% if review.comment %}<div style="font-size:0.83rem;margin-top:4px;color:var(--text-secondary)">{{ review.comment }}</div>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not services and not reviews and not received_reviews %}
+      <div class="empty-state"><div class="empty-state__icon">📊</div><div class="empty-state__title">No activity yet</div></div>
+    {% endif %}
+  </div>
+
+  <!-- ── TAB: Security ── -->
+  {% elif active_tab == 'security' %}
+  <div style="max-width:580px">
+    <h2 class="section__title" style="margin-bottom:20px">Security Settings</h2>
+
+    <div class="card" style="padding:24px;margin-bottom:16px">
+      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:18px;font-weight:700">Security Status</div>
+
+      <div class="security-item">
+        <div class="security-item__info">
+          <div class="security-item__title">📱 Phone Verification</div>
+          <div class="security-item__desc">Verify your phone number to get a Verified badge</div>
+        </div>
+        {% if profile_user.phone_verified %}
+          <span class="verified-badge">✓ Verified</span>
+        {% else %}
+          <a href="{% url 'users:verify_phone' %}" class="btn btn--sm btn--primary">Verify Now</a>
+        {% endif %}
+      </div>
+
+      <div class="security-item">
+        <div class="security-item__info">
+          <div class="security-item__title">🔐 Two-Factor Authentication</div>
+          <div class="security-item__desc">Add OTP on every login for extra security</div>
+        </div>
+        {% if profile_user.two_factor_enabled %}
+          <span class="verified-badge">✓ Enabled</span>
+        {% else %}
+          <a href="{% url 'users:profile_edit' %}" class="btn btn--sm btn--outline">Enable</a>
+        {% endif %}
+      </div>
+
+      <div class="security-item">
+        <div class="security-item__info">
+          <div class="security-item__title">🔑 Password</div>
+          <div class="security-item__desc">Change your account password</div>
+        </div>
+        <a href="{% url 'users:password_change' %}" class="btn btn--sm btn--outline">Change Password</a>
+      </div>
+    </div>
+
+    <div class="card" style="padding:24px">
+      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:18px;font-weight:700">Account Details</div>
+      <div style="font-size:0.875rem;color:var(--text-secondary);display:flex;flex-direction:column;gap:10px">
+        <div><span style="color:var(--text-muted);width:140px;display:inline-block">Username</span> {{ profile_user.username }}</div>
+        <div><span style="color:var(--text-muted);width:140px;display:inline-block">Email</span> {{ profile_user.email }}</div>
+        <div><span style="color:var(--text-muted);width:140px;display:inline-block">Account Type</span> {{ profile_user.get_role_display }}</div>
+        <div><span style="color:var(--text-muted);width:140px;display:inline-block">Joined</span> {{ profile_user.date_joined|date:"F d, Y" }}</div>
+        <div><span style="color:var(--text-muted);width:140px;display:inline-block">Last Updated</span> {{ profile_user.updated_at|date:"F d, Y" }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: Settings ── -->
+  {% elif active_tab == 'settings' %}
+  <div style="max-width:580px">
+    <h2 class="section__title" style="margin-bottom:20px">Account Settings</h2>
+
+    <!-- Language -->
+    <div class="card" style="padding:24px;margin-bottom:16px">
+      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:18px;font-weight:700">🌐 Language Preference</div>
+      <p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:16px">Choose your preferred display language.</p>
+      <form method="post" action="{% url 'users:set_language' %}" style="display:flex;gap:10px">
+        {% csrf_token %}
+        <select name="language" class="form-input" style="max-width:200px">
+          <option value="en" {% if profile_user.preferred_language == 'en' %}selected{% endif %}>🇬🇧 English</option>
+          <option value="hi" {% if profile_user.preferred_language == 'hi' %}selected{% endif %}>🇮🇳 Hindi</option>
+        </select>
+        <button type="submit" class="btn btn--primary btn--sm">Save</button>
+      </form>
+    </div>
+
+    <!-- Quick links -->
+    <div class="card" style="padding:24px;margin-bottom:16px">
+      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:18px;font-weight:700">Quick Actions</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <a href="{% url 'users:profile_edit' %}" class="settings-link">✏ Edit Personal Information</a>
+        <a href="{% url 'users:password_change' %}" class="settings-link">🔑 Change Password</a>
+        {% if not profile_user.phone_verified %}
+          <a href="{% url 'users:verify_phone' %}" class="settings-link" style="color:var(--warn)">📱 Verify Phone Number</a>
+        {% endif %}
+        {% if profile_user.is_provider %}
+          <a href="{% url 'services:service_create' %}" class="settings-link">+ Add New Service</a>
+          <a href="{% url 'services:provider_dashboard' %}" class="settings-link">📊 Provider Dashboard</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Notification info -->
+    <div class="card" style="padding:24px">
+      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:14px;font-weight:700">Contact Preferences</div>
+      <div style="font-size:0.875rem;color:var(--text-secondary)">
+        Customers can reach you via:
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
+          <div>📞 Phone: {% if profile_user.phone %}{{ profile_user.phone }}{% else %}<a href="{% url 'users:profile_edit' %}" style="color:var(--accent)">Add phone</a>{% endif %}</div>
+          <div>📱 WhatsApp: {% if profile_user.whatsapp_no %}{{ profile_user.whatsapp_no }}{% else %}<a href="{% url 'users:profile_edit' %}" style="color:var(--accent)">Add WhatsApp</a>{% endif %}</div>
+          <div>✉ Email: {{ profile_user.email }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<style>
+.profile-tabs-bar { background:var(--white); border-bottom:1px solid var(--border); position:sticky;top:62px;z-index:50; }
+.profile-tabs { display:flex; gap:0; overflow-x:auto; }
+.profile-tab { padding:14px 20px; font-size:0.855rem; font-weight:500; color:var(--text-muted); border-bottom:2px solid transparent; white-space:nowrap; transition:all 0.15s; }
+.profile-tab:hover { color:var(--text-primary); }
+.profile-tab.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:600; }
+.contact-btn { display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--r-sm);font-size:0.82rem;font-weight:600;text-decoration:none;transition:all 0.15s; }
+.contact-btn--wa { background:#128C7E; color:white; }
+.contact-btn--wa:hover { background:#075E54; color:white; }
+.contact-btn--phone { background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent-dim); }
+.contact-btn--phone:hover { background:var(--accent); color:white; }
+.contact-btn--email { background:var(--bg-hover); color:var(--text-secondary); border:1px solid var(--border); }
+.contact-btn--email:hover { border-color:var(--accent); color:var(--accent); }
+.security-item { display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--border); }
+.security-item:last-child { border-bottom:none; }
+.security-item__info { flex:1; }
+.security-item__title { font-weight:600;font-size:0.9rem;color:var(--text-primary);margin-bottom:2px; }
+.security-item__desc { font-size:0.8rem;color:var(--text-muted); }
+.settings-link { display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:var(--r-sm);font-size:0.875rem;color:var(--text-secondary);border:1px solid var(--border);transition:all 0.15s;text-decoration:none; }
+.settings-link:hover { border-color:var(--accent);color:var(--accent);background:var(--accent-soft); }
+</style>
+
+{% endblock %}

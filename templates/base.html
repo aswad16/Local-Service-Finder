@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}LocalServe — Home Services at Your Doorstep{% endblock %}</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+  {% block extra_css %}{% endblock %}
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231d4ed8'/><path d='M8 16h16M16 8v16' stroke='white' stroke-width='2.5' stroke-linecap='round'/></svg>" />
+  <script>(function(){var t=localStorage.getItem('ls-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="{% url 'home' %}" class="navbar__brand">
+    <span class="navbar__brand-icon">
+      <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M3 9l7-7 7 7v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9z" stroke="white" stroke-width="1.5" fill="none" stroke-linejoin="round"/><path d="M7 19V12h6v7" stroke="white" stroke-width="1.5" fill="none"/></svg>
+    </span>
+    Local<span>Serve</span>
+  </a>
+
+  <div class="navbar__nav">
+    <a href="{% url 'home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>Home</a>
+    <a href="{% url 'services:service_list' %}">Services</a>
+    <a href="{% url 'search' %}">Search</a>
+    <a href="{% url 'ai_recommend' %}">AI Recommendations</a>
+    {% if user.is_authenticated and user.is_provider %}
+      <a href="{% url 'services:provider_dashboard' %}">Dashboard</a>
+    {% endif %}
+    {% if user.is_authenticated and user.is_admin_user %}
+      <a href="{% url 'adminpanel:dashboard' %}">Admin</a>
+    {% endif %}
+  </div>
+
+  <div class="navbar__actions">
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
+      <svg id="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      <svg id="icon-sun" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+    {% if user.is_authenticated %}
+      <div class="navbar__profile-menu" style="position:relative">
+        <button class="btn btn--ghost btn--sm" id="profileMenuBtn" style="color:var(--text-secondary);display:flex;align-items:center;gap:7px" onclick="toggleProfileMenu()">
+          {% if user.avatar %}
+            <img src="{{ user.avatar.url }}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid var(--border)" alt="" />
+          {% else %}
+            <span style="width:28px;height:28px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-size:0.7rem;color:white;font-weight:800;flex-shrink:0;font-family:var(--font-head)">{{ user.username|first|upper }}</span>
+          {% endif %}
+          <span style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ user.username }}</span>
+          {% if user.phone_verified %}<span class="verified-badge" style="font-size:0.6rem">✓</span>{% endif %}
+          <svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown">
+          <div class="profile-dropdown__header">
+            <div style="font-weight:700;font-size:0.9rem">{{ user.get_full_name|default:user.username }}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">{{ user.get_role_display }}</div>
+          </div>
+          <div class="profile-dropdown__links">
+            <a href="{% url 'users:profile' %}">👤 My Profile</a>
+            <a href="{% url 'users:profile' %}?tab=activity">📊 Activity</a>
+            <a href="{% url 'users:profile' %}?tab=security">🔐 Security</a>
+            <a href="{% url 'users:profile' %}?tab=settings">⚙ Account Settings</a>
+            <a href="{% url 'users:profile_edit' %}">✏ Edit Profile</a>
+            <a href="{% url 'users:password_change' %}">🔑 Change Password</a>
+            {% if user.is_provider %}<a href="{% url 'services:provider_dashboard' %}">📋 Provider Dashboard</a>{% endif %}
+            {% if user.is_admin_user %}<a href="{% url 'adminpanel:dashboard' %}">🛠 Admin Panel</a>{% endif %}
+          </div>
+          <div class="profile-dropdown__footer">
+            <form method="post" action="{% url 'users:logout' %}">
+              {% csrf_token %}
+              <button type="submit" style="width:100%;background:none;border:1px solid var(--border);padding:8px;border-radius:var(--r-sm);font-size:0.82rem;color:var(--danger);cursor:pointer;font-family:var(--font-body);transition:all 0.15s" onmouseover="this.style.background='rgba(224,36,36,0.08)'" onmouseout="this.style.background='none'">Sign Out</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <a href="{% url 'users:login' %}" class="btn btn--ghost btn--sm">Sign In</a>
+      <a href="{% url 'users:register' %}" class="btn btn--primary btn--sm">Get Started</a>
+    {% endif %}
+  </div>
+</nav>
+
+{% if messages %}
+<div class="container messages-list" style="padding-top:10px">
+  {% for message in messages %}
+    <div class="message message--{{ message.tags|default:'info' }}">{{ message }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% block content %}{% endblock %}
+
+<footer class="footer-v2">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">Local<span>Serve</span></div>
+        <p class="footer-desc">Connecting customers with verified local service providers for home repair, cleaning, tutoring and more across India.</p>
+        <div class="footer-newsletter">
+          <h4>Stay Updated</h4>
+          <p>New listings and deals in your city.</p>
+          <div class="footer-newsletter-form">
+            <input type="email" id="nl-email" placeholder="Enter your email" />
+            <button type="button" onclick="handleNewsletter()">Subscribe</button>
+          </div>
+        </div>
+        <div class="footer-social">
+          <a href="#" title="LinkedIn"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg></a>
+          <a href="#" title="Twitter"><svg viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg></a>
+          <a href="#" title="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+          <a href="https://www.instagram.com/localserve_/" title="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+        </div>
+      </div>
+
+      <div>
+        <div class="footer-col-title">For Customers</div>
+        <div class="footer-links">
+          <a href="{% url 'services:service_list' %}">Browse Services</a>
+          <a href="{% url 'search' %}">Search</a>
+          <a href="{% url 'ai_recommend' %}">AI Recommendations</a>
+          {% if user.is_authenticated %}<a href="{% url 'users:profile' %}">My Account</a>{% else %}<a href="{% url 'users:register' %}">Create Account</a>{% endif %}
+        </div>
+        <div class="footer-col-title" style="margin-top:22px">Categories</div>
+        <div class="footer-links">
+          <a href="{% url 'search' %}?q=plumber">Plumbing</a>
+          <a href="{% url 'search' %}?q=electrician">Electrical</a>
+          <a href="{% url 'search' %}?q=cleaning">Cleaning</a>
+          <a href="{% url 'search' %}?q=tutor">Tutoring</a>
+        </div>
+      </div>
+
+      <div>
+        <div class="footer-col-title">For Providers</div>
+        <div class="footer-links">
+          <a href="{% url 'users:register' %}">Register as Provider</a>
+          {% if user.is_authenticated and user.is_provider %}
+            <a href="{% url 'services:service_create' %}">Add Service</a>
+            <a href="{% url 'services:provider_dashboard' %}">Dashboard</a>
+          {% else %}
+            <a href="{% url 'users:register' %}">List Your Service</a>
+          {% endif %}
+          <a href="#">Provider Guidelines</a>
+          <a href="#">Pricing</a>
+        </div>
+        <div class="footer-col-title" style="margin-top:22px">Resources</div>
+        <div class="footer-links">
+          <a href="#">Help Center</a>
+          <a href="#">Safety Tips</a>
+          <a href="#">Blog</a>
+        </div>
+      </div>
+
+      <div>
+        <div class="footer-links">
+          {% if user.is_authenticated %}
+            {% if not user.phone_verified and user.phone %}<a href="{% url 'users:verify_phone' %}">Verify Phone</a>{% endif %}
+          {% else %}
+            <a href="{% url 'users:login' %}">Sign In</a>
+            <a href="{% url 'users:register' %}">Create Account</a>
+          {% endif %}
+        </div>
+        <div class="footer-col-title" style="margin-top:22px">Company</div>
+        <div class="footer-links">
+          <a href="#">About Us</a>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Contact</a>
+        </div>
+        <div style="margin-top:18px;padding:14px;background:rgba(79,135,245,0.06);border-radius:10px;border:1px solid rgba(79,135,245,0.12)">
+          <div style="font-size:0.68rem;color:#475569;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px">Support</div>
+          <div style="font-size:0.8rem;color:#334155">support@localserve.in</div>
+          <div style="font-size:0.8rem;color:#334155;margin-top:3px">1800-123-4567 (Toll Free)</div>
+          <div style="font-size:0.72rem;color:#2a3347;margin-top:5px">Mon–Sat, 9AM–7PM IST</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="container footer-bottom-inner">
+      <span>© 2025 LocalServe Technologies Pvt. Ltd. All rights reserved.</span>
+      <div style="display:flex;gap:18px;align-items:center">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Cookies</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/auth.js' %}"></script>
+<script>
+// Profile dropdown
+function toggleProfileMenu() {
+  const d = document.getElementById('profileDropdown');
+  if (d) d.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  const btn = document.getElementById('profileMenuBtn');
+  const d = document.getElementById('profileDropdown');
+  if (d && btn && !btn.contains(e.target) && !d.contains(e.target)) d.classList.remove('open');
+});
+
+// Theme
+(function(){
+  var t = document.documentElement.getAttribute('data-theme') || 'light';
+  var moon = document.getElementById('icon-moon');
+  var sun  = document.getElementById('icon-sun');
+  if (t === 'dark') { if(moon) moon.style.display='none'; if(sun) sun.style.display=''; }
+})();
+
+document.getElementById('themeToggle')?.addEventListener('click', function() {
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('ls-theme', next);
+  var moon = document.getElementById('icon-moon');
+  var sun  = document.getElementById('icon-sun');
+  if (next === 'dark') { moon.style.display='none'; sun.style.display=''; }
+  else { moon.style.display=''; sun.style.display='none'; }
+});
+
+function handleNewsletter() {
+  var el = document.getElementById('nl-email');
+  if (!el || !el.value.includes('@')) { el && el.focus(); return; }
+  el.value = '';
+  var btn = el.nextElementSibling;
+  if (btn) { btn.textContent = 'Subscribed'; btn.style.background = '#0d9f6e'; }
+}
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Edit Profile — LocalServe{% endblock %}
+
+{% block content %}
+<div class="container section" style="max-width:720px">
+  <div style="margin-bottom:28px">
+    <a href="{% url 'users:profile' %}" style="color:var(--text-muted);font-size:0.85rem;display:inline-flex;align-items:center;gap:6px;margin-bottom:12px">← Back to Profile</a>
+    <h1 style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;letter-spacing:-0.5px">Edit Profile</h1>
+    <p style="color:var(--text-muted);font-size:0.9rem;margin-top:4px">Update your personal information and settings</p>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" id="profile-form">
+    {% csrf_token %}
+
+    <!-- Profile Picture -->
+    <div class="card" style="padding:28px;margin-bottom:20px">
+      <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;margin-bottom:18px">Profile Picture</h3>
+      <div style="display:flex;align-items:center;gap:20px">
+        <div class="avatar-upload-wrap" id="avatar-wrap" onclick="document.getElementById('id_avatar').click()">
+          {% if request.user.avatar %}
+            <img src="{{ request.user.avatar.url }}" alt="" class="avatar-preview" id="avatar-preview" />
+          {% else %}
+            <div class="avatar-initials" id="avatar-preview">{{ request.user.username|first|upper }}</div>
+          {% endif %}
+          <div class="avatar-upload-overlay">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+        </div>
+        <div>
+          <div style="font-weight:600;font-size:0.95rem;margin-bottom:4px;color:var(--text-primary)">Upload Photo</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:10px">JPG, PNG up to 5MB. Square crop recommended.</div>
+          <button type="button" onclick="document.getElementById('id_avatar').click()" class="btn btn--outline btn--sm">Choose Photo</button>
+          <div style="display:none">{{ form.avatar }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Basic Info -->
+    <div class="card" style="padding:28px;margin-bottom:20px">
+      <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;margin-bottom:18px">Basic Information</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          {{ form.first_name }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          {{ form.last_name }}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        {{ form.email }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bio</label>
+        {{ form.bio }}
+        <div class="form-help">Tell clients about yourself and your expertise.</div>
+      </div>
+    </div>
+
+    <!-- Location -->
+    <div class="card" style="padding:28px;margin-bottom:20px">
+      <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;margin-bottom:18px">📍 Location</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label class="form-label">City</label>
+          {{ form.city }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">State</label>
+          {{ form.state }}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Full Address (optional)</label>
+        {{ form.location }}
+      </div>
+    </div>
+
+    <!-- Contact with country codes -->
+    <div class="card" style="padding:28px;margin-bottom:20px">
+      <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;margin-bottom:18px">Contact Details</h3>
+
+      <div class="form-group">
+        <label class="form-label">📞 Phone Number</label>
+        <div class="phone-field-wrap">
+          {{ form.phone_country_code }}
+          {{ form.phone }}
+        </div>
+        {% if request.user.phone_verified %}
+          <div class="form-help" style="color:var(--success)">✓ Phone verified</div>
+        {% elif request.user.phone %}
+          <div class="form-help" style="color:var(--warn)">⚠ Not verified. <a href="{% url 'users:verify_phone' %}" style="color:var(--accent)">Verify now →</a></div>
+        {% else %}
+          <div class="form-help">Add your number to get verified.</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group" style="margin-top:16px">
+        <label class="form-label" style="display:flex;align-items:center;gap:6px">
+          <svg style="width:14px;height:14px;fill:#25D366" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.997 0C5.375 0 0 5.376 0 12c0 2.116.554 4.099 1.523 5.822L0 24l6.335-1.496A11.955 11.955 0 0012 24c6.624 0 12-5.376 12-12S18.621 0 11.997 0zm.003 21.818a9.815 9.815 0 01-5.001-1.368l-.359-.213-3.761.888.937-3.668-.234-.376A9.844 9.844 0 012.18 12c0-5.413 4.407-9.818 9.82-9.818 5.414 0 9.82 4.405 9.82 9.818 0 5.414-4.406 9.818-9.82 9.818z"/></svg>
+          WhatsApp Number
+        </label>
+        <div class="phone-field-wrap">
+          {{ form.whatsapp_country_code }}
+          {{ form.whatsapp_no }}
+        </div>
+        <div class="form-help">Customers will use this to contact you on WhatsApp.</div>
+      </div>
+    </div>
+
+    <!-- Language -->
+    <div class="card" style="padding:28px;margin-bottom:20px">
+      <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;margin-bottom:18px">🌐 Language & Preferences</h3>
+      <div class="form-group">
+        <label class="form-label">Preferred Language</label>
+        {{ form.preferred_language }}
+        <div class="form-help">Choose your preferred display language (English or Hindi).</div>
+      </div>
+    </div>
+
+    <!-- Security -->
+    <div class="card" style="padding:28px;margin-bottom:20px" id="security">
+      <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;margin-bottom:18px">🔐 Security</h3>
+
+      <div class="security-card">
+        <div class="security-card__info">
+          <div class="security-card__title">Two-Factor Authentication (2FA)</div>
+          <div class="security-card__desc">
+            Require an OTP on every login for extra security.
+            {% if not request.user.phone %}<span style="color:var(--warn)"> — Add a phone number first.</span>
+            {% elif not request.user.phone_verified %}<span style="color:var(--warn)"> — Verify your phone first.</span>{% endif %}
+          </div>
+        </div>
+        <label class="toggle-switch">
+          {{ form.two_factor_enabled }}
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+      {% if not request.user.phone_verified and request.user.phone %}
+      <div style="margin-top:14px;padding:12px 16px;background:rgba(245,158,11,0.1);border-radius:var(--r-md);border:1px solid rgba(245,158,11,0.25);font-size:0.84rem;color:var(--text-secondary)">
+        <strong>Verify your phone</strong> to enable 2FA and get a verified badge.
+        <a href="{% url 'users:verify_phone' %}" class="btn btn--sm btn--primary" style="margin-left:10px">Verify Phone →</a>
+      </div>
+      {% endif %}
+
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <a href="{% url 'users:password_change' %}" class="btn btn--outline btn--sm">🔑 Change Password</a>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px">
+      <button type="submit" class="btn btn--primary btn--lg">Save Changes</button>
+      <a href="{% url 'users:profile' %}" class="btn btn--outline btn--lg">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<style>
+.phone-field-wrap { display:flex; gap:8px; align-items:center; }
+.country-code-select { flex-shrink:0; width:165px; padding:9px 10px; border:1.5px solid var(--border-mid); border-radius:var(--r-sm); background:var(--bg-input); color:var(--text-primary); font-size:0.82rem; font-family:var(--font-body); cursor:pointer; outline:none; transition:border-color 0.15s; }
+.country-code-select:focus { border-color:var(--accent); }
+.phone-number-input { flex:1; }
+[data-theme="dark"] .country-code-select { background:var(--bg-input); border-color:var(--border-mid); color:var(--text-primary); }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('id_avatar')?.addEventListener('change', function() {
+  if (!this.files || !this.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wrap = document.getElementById('avatar-wrap');
+    wrap.innerHTML = `<img src="${e.target.result}" class="avatar-preview" id="avatar-preview" /><div class="avatar-upload-overlay" onclick="document.getElementById('id_avatar').click()"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>`;
+  };
+  reader.readAsDataURL(this.files[0]);
+});
+</script>
+{% endblock %}

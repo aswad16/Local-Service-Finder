@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Create Account — LocalServe{% endblock %}
+
+{% block content %}
+<div class="auth-page" style="padding:48px 24px;align-items:flex-start">
+  <div class="auth-card" style="max-width:600px;width:100%">
+    <div class="auth-card__logo">Local<span>Serve</span></div>
+    <h1 class="auth-card__title" style="text-align:center">Create your account</h1>
+    <p style="text-align:center;color:var(--text-muted);font-size:0.875rem;margin-bottom:28px">Join thousands of users — find or offer services locally.</p>
+
+    <form method="post" id="register-form" novalidate>
+      {% csrf_token %}
+
+      <!-- Role -->
+      <div class="reg-section">
+        <div class="reg-section__label">I want to…</div>
+        <div class="role-selector">
+          {% for radio in form.role %}
+            {{ radio.tag }}
+            <label for="{{ radio.id_for_label }}">
+              {% if radio.data.value == 'customer' %}
+                <svg class="role-icon-svg" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+                <span class="role-title">Find Services</span>
+                <span class="role-desc">Browse &amp; hire local providers</span>
+              {% else %}
+                <svg class="role-icon-svg" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                <span class="role-title">Offer Services</span>
+                <span class="role-desc">List &amp; grow your business</span>
+              {% endif %}
+            </label>
+          {% endfor %}
+        </div>
+        {% if form.role.errors %}<div class="form-error">{{ form.role.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Personal Info -->
+      <div class="reg-section">
+        <div class="reg-section__label">Personal Information</div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">First Name <span class="req">*</span></label>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}<div class="form-error">{{ form.first_name.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name</label>
+            {{ form.last_name }}
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Username <span class="req">*</span></label>
+            {{ form.username }}
+            {% if form.username.errors %}<div class="form-error">{{ form.username.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email <span class="req">*</span></label>
+            {{ form.email }}
+            {% if form.email.errors %}<div class="form-error">{{ form.email.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bio <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+          {{ form.bio }}
+          <div class="form-help">Tell clients about yourself and your expertise.</div>
+        </div>
+      </div>
+
+      <!-- Location -->
+      <div class="reg-section">
+        <div class="reg-section__label">Location</div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">City <span class="req">*</span></label>
+            {{ form.city }}
+            {% if form.city.errors %}<div class="form-error">{{ form.city.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">State / Province</label>
+            {{ form.state }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="reg-section">
+        <div class="reg-section__label">Contact Details</div>
+
+        <div class="form-group">
+          <label class="form-label">Phone Number <span class="req">*</span></label>
+          <div class="phone-field-wrap">
+            {{ form.phone_country_code }}
+            {{ form.phone }}
+          </div>
+          <div class="form-help">You'll verify this number via OTP after signup.</div>
+          {% if form.phone.errors %}<div class="form-error">{{ form.phone.errors.0 }}</div>{% endif %}
+          {% if form.phone_country_code.errors %}<div class="form-error">{{ form.phone_country_code.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-group" style="margin-top:14px">
+          <label class="form-label" style="display:flex;align-items:center;gap:5px">
+            <svg style="width:14px;height:14px;fill:#25D366" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.997 0C5.375 0 0 5.376 0 12c0 2.116.554 4.099 1.523 5.822L0 24l6.335-1.496A11.955 11.955 0 0012 24c6.624 0 12-5.376 12-12S18.621 0 11.997 0zm.003 21.818a9.815 9.815 0 01-5.001-1.368l-.359-.213-3.761.888.937-3.668-.234-.376A9.844 9.844 0 012.18 12c0-5.413 4.407-9.818 9.82-9.818 5.414 0 9.82 4.405 9.82 9.818 0 5.414-4.406 9.818-9.82 9.818z"/></svg>
+            WhatsApp Number <span style="color:var(--text-muted);font-weight:400">(optional)</span>
+          </label>
+          <div class="phone-field-wrap">
+            {{ form.whatsapp_country_code }}
+            {{ form.whatsapp_no }}
+          </div>
+          <div class="form-help">Leave blank to use same as phone.</div>
+          {% if form.whatsapp_no.errors %}<div class="form-error">{{ form.whatsapp_no.errors.0 }}</div>{% endif %}
+        </div>
+      </div>
+
+      <!-- Language & Password -->
+      <div class="reg-section">
+        <div class="reg-section__label">Preferences &amp; Security</div>
+
+        <div class="form-group">
+          <label class="form-label">🌐 Preferred Language</label>
+          {{ form.preferred_language }}
+        </div>
+
+        <div class="form-row-2" style="margin-top:14px">
+          <div class="form-group">
+            <label class="form-label">Password <span class="req">*</span></label>
+            {{ form.password1 }}
+            {% if form.password1.errors %}<div class="form-error">{{ form.password1.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password <span class="req">*</span></label>
+            {{ form.password2 }}
+            {% if form.password2.errors %}<div class="form-error">{{ form.password2.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
+        {% if form.non_field_errors %}
+          <div class="form-error" style="margin-top:10px">{{ form.non_field_errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--block btn--lg" style="margin-top:8px">
+        Create Account →
+      </button>
+
+      <div class="auth-alt" style="text-align:center;margin-top:18px;font-size:0.85rem;color:var(--text-muted)">
+        Already have an account? <a href="{% url 'users:login' %}" style="color:var(--accent);font-weight:600">Sign In</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.phone-field-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.country-code-select {
+  flex-shrink: 0;
+  width: 160px;
+  padding: 9px 10px;
+  border: 1.5px solid var(--border-mid);
+  border-radius: var(--r-sm);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 0.83rem;
+  font-family: var(--font-body);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.country-code-select:focus { border-color: var(--accent); }
+.phone-number-input { flex: 1; }
+[data-theme="dark"] .country-code-select {
+  background: var(--bg-input);
+  border-color: var(--border-mid);
+  color: var(--text-primary);
+}
+</style>
+{% endblock %}

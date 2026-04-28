@@ -1,0 +1,68 @@
+{% extends 'adminpanel/base_admin.html' %}
+{% block title %}Categories{% endblock %}
+{% block page_title %}Category Management{% endblock %}
+{% block breadcrumb %}Admin / Categories{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start">
+  <!-- Category table -->
+  <div class="admin-panel">
+    <div class="admin-panel__header">
+      <div class="admin-panel__title">All Categories ({{ categories.count }})</div>
+    </div>
+    <table class="admin-table">
+      <thead><tr><th>Icon</th><th>Name</th><th>Slug</th><th>Services</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for cat in categories %}
+          <tr>
+            <td style="font-size:1.4rem">{{ cat.icon }}</td>
+            <td class="td-main">{{ cat.name }}</td>
+            <td style="color:var(--text-muted);font-size:0.8rem;font-family:monospace">{{ cat.slug }}</td>
+            <td>
+              <span class="badge badge--blue">{{ cat.count }}</span>
+            </td>
+            <td>
+              <form method="post" action="{% url 'adminpanel:category_delete' cat.pk %}"
+                    onsubmit="return confirm('Delete category \'{{ cat.name }}\'? Services will be unlinked.')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn--danger btn--sm"
+                        {% if cat.count > 0 %}title="Warning: {{ cat.count }} services use this category"{% endif %}>
+                  Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">No categories yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Create form -->
+  <div class="admin-panel" style="position:sticky;top:88px">
+    <div class="admin-panel__header">
+      <div class="admin-panel__title">+ New Category</div>
+    </div>
+    <div class="admin-panel__body">
+      <form method="post" action="{% url 'adminpanel:category_create' %}">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Category Name *</label>
+          <input type="text" name="name" class="form-input" placeholder="e.g. Electrician" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Icon (Emoji)</label>
+          <input type="text" name="icon" class="form-input" value="" placeholder="" maxlength="4" />
+          <div class="form-help">Paste a single emoji</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea name="description" class="form-input" rows="3" placeholder="Optional description..."></textarea>
+        </div>
+        <button type="submit" class="btn btn--primary btn--block">Create Category</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'adminpanel/base_admin.html' %}
+{% block title %}Services{% endblock %}
+{% block page_title %}Service Management{% endblock %}
+{% block breadcrumb %}Admin / Services{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+  <div class="admin-panel__header">
+    <div class="admin-panel__title"> All Services ({{ services.count }})</div>
+  </div>
+  <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+    <form method="get" class="admin-search-bar">
+      <input type="text" name="q" value="{{ search }}" placeholder="Search by title..." />
+      <select name="status">
+        <option value="">All Status</option>
+        <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+        <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+      </select>
+      <button type="submit" class="btn btn--primary btn--sm">Filter</button>
+      <a href="{% url 'adminpanel:service_list' %}" class="btn btn--outline btn--sm">Clear</a>
+    </form>
+  </div>
+  <table class="admin-table">
+    <thead>
+      <tr><th>Service</th><th>Provider</th><th>Category</th><th>City</th><th>Price</th><th>Views</th><th>Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for service in services %}
+        <tr>
+          <td>
+            <a href="{% url 'services:service_detail' service.slug %}" target="_blank" class="td-main">{{ service.title|truncatechars:40 }}</a>
+          </td>
+          <td>{{ service.provider.username }}</td>
+          <td>{{ service.category.icon }} {{ service.category.name }}</td>
+          <td>{{ service.city }}</td>
+          <td style="color:var(--accent-lite);font-weight:600">₹{{ service.price }}</td>
+          <td>{{ service.views_count }}</td>
+          <td>
+            <span class="badge {% if service.is_active %}badge--green{% else %}badge--red{% endif %}">
+              {% if service.is_active %}Active{% else %}Inactive{% endif %}
+            </span>
+            {% if service.is_featured %}<span class="badge badge--gold">Featured</span>{% endif %}
+          </td>
+          <td>
+            <div class="td-actions">
+              <form method="post" action="{% url 'adminpanel:service_featured' service.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn--outline btn--sm" title="Toggle Featured"></button>
+              </form>
+              <form method="post" action="{% url 'adminpanel:service_active' service.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn--outline btn--sm">{% if service.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted)">No services found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

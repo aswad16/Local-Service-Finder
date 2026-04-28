@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  {% if purpose == '2fa' %}Two-Factor Verification{% else %}Verify Phone{% endif %} — LocalServe
+{% endblock %}
+
+{% block content %}
+<div class="otp-page">
+  <div class="otp-card">
+
+    <!-- Icon -->
+    <div class="otp-icon">
+      {% if purpose == '2fa' %}
+        <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+      {% else %}
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.63 19.79 19.79 0 01.06 1a2 2 0 012-2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 6.91a16 16 0 006.29 6.29l.95-.95a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+      {% endif %}
+    </div>
+
+    <div class="otp-title">
+      {% if purpose == '2fa' %}Two-Factor Auth{% else %}Verify Your Phone{% endif %}
+    </div>
+
+    <p class="otp-subtitle">
+      {% if purpose == '2fa' %}
+        Enter the 6-digit code sent to your phone ending in <strong>···{{ phone_hint }}</strong>.
+      {% else %}
+        A 6-digit code was sent to your phone ending in <strong>···{{ phone_hint }}</strong>.
+      {% endif %}
+    </p>
+
+    <!-- Messages -->
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="message message--{{ msg.tags }}" style="margin-bottom:16px;text-align:left">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- OTP form -->
+    <form method="post" id="otp-form" autocomplete="off">
+      {% csrf_token %}
+      <div class="otp-boxes" id="otp-boxes">
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autofocus />
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+      </div>
+      <!-- Hidden real input Django reads -->
+      <input type="hidden" name="otp" id="otp-hidden" />
+      {% if form.otp.errors %}
+        <div class="form-error" style="text-align:center;margin-top:8px">{{ form.otp.errors.0 }}</div>
+      {% endif %}
+
+      <button type="submit" class="btn btn--primary btn--block btn--lg" id="verify-btn" style="margin-top:20px" disabled>
+        Verify Code
+      </button>
+    </form>
+
+    <!-- Timer + Resend -->
+    <div style="margin-top:20px;display:flex;align-items:center;justify-content:space-between;font-size:0.82rem;color:var(--text-muted)">
+      <span>Expires in <strong id="otp-timer" style="color:var(--accent)">10:00</strong></span>
+      <form method="post" style="margin:0">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="resend" />
+        <button type="submit" class="btn btn--ghost btn--sm" id="resend-btn" disabled>
+          Resend OTP
+        </button>
+      </form>
+    </div>
+
+    {% if purpose == 'phone' %}
+    <div style="margin-top:12px;text-align:center">
+      <a href="{% url 'users:profile' %}" style="font-size:0.8rem;color:var(--text-muted)">Skip for now</a>
+    </div>
+    {% endif %}
+
+    <!-- Dev mode notice: show OTP in UI -->
+    {% if dev_otp %}
+    <div style="margin-top:20px;padding:12px 16px;background:#fef9c3;border:1px solid #fde047;border-radius:var(--r-md);font-size:0.82rem;color:#713f12;text-align:left">
+      <strong>🛠 Dev Mode — OTP:</strong>
+      <span style="font-size:1.3rem;font-weight:800;letter-spacing:6px;margin-left:8px;font-family:monospace">{{ dev_otp }}</span>
+      <div style="margin-top:4px;font-size:0.74rem">Remove <code>dev_otp</code> context from production views.</div>
+    </div>
+    {% endif %}
+
+    <!-- Demo SMS note -->
+    <div style="margin-top:14px;padding:10px 14px;background:var(--bg-hover);border-radius:var(--r-md);font-size:0.77rem;color:var(--text-muted);text-align:left;border-left:3px solid var(--warn)">
+      <strong style="color:var(--warn)">Demo:</strong> OTP is also printed in your server console. Integrate Twilio/MSG91 for real SMS.
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const boxes = Array.from(document.querySelectorAll('.otp-box'));
+  const hidden = document.getElementById('otp-hidden');
+  const verifyBtn = document.getElementById('verify-btn');
+  const resendBtn = document.getElementById('resend-btn');
+
+  function getValue() { return boxes.map(b => b.value).join(''); }
+
+  function syncHidden() {
+    const val = getValue();
+    hidden.value = val;
+    const done = val.length === 6 && /^\d{6}$/.test(val);
+    verifyBtn.disabled = !done;
+    if (done) verifyBtn.focus();
+  }
+
+  boxes.forEach((box, i) => {
+    box.addEventListener('input', e => {
+      // Allow paste into first box
+      const raw = box.value.replace(/\D/g, '');
+      if (raw.length > 1) {
+        // Distribute pasted digits
+        raw.split('').forEach((ch, j) => { if (boxes[i + j]) boxes[i + j].value = ch; });
+        const next = Math.min(i + raw.length, boxes.length - 1);
+        boxes[next].focus();
+        box.value = raw[0] || '';
+      } else {
+        box.value = raw;
+        if (raw && boxes[i + 1]) boxes[i + 1].focus();
+      }
+      syncHidden();
+    });
+
+    box.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !box.value && boxes[i - 1]) {
+        boxes[i - 1].value = '';
+        boxes[i - 1].focus();
+        syncHidden();
+      }
+      if (e.key === 'ArrowLeft' && boxes[i - 1]) boxes[i - 1].focus();
+      if (e.key === 'ArrowRight' && boxes[i + 1]) boxes[i + 1].focus();
+    });
+
+    box.addEventListener('paste', e => {
+      e.preventDefault();
+      const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+      paste.split('').forEach((ch, j) => { if (boxes[j]) boxes[j].value = ch; });
+      boxes[Math.min(paste.length, boxes.length - 1)].focus();
+      syncHidden();
+    });
+
+    box.addEventListener('focus', () => box.select());
+  });
+
+  // Auto-submit when complete
+  document.getElementById('otp-form').addEventListener('submit', function() {
+    syncHidden();
+  });
+
+  // Countdown timer
+  let seconds = 600;
+  const timerEl = document.getElementById('otp-timer');
+  const interval = setInterval(() => {
+    seconds--;
+    if (seconds <= 0) {
+      clearInterval(interval);
+      timerEl.textContent = 'Expired';
+      timerEl.style.color = 'var(--danger)';
+      verifyBtn.disabled = true;
+      verifyBtn.textContent = 'OTP Expired';
+      return;
+    }
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    timerEl.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+    if (seconds < 60) timerEl.style.color = 'var(--danger)';
+    // Enable resend after 30 seconds
+    if (seconds <= 570) resendBtn.disabled = false;
+  }, 1000);
+})();
+</script>
+{% endblock %}

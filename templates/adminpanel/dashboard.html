@@ -1,0 +1,154 @@
+{% extends 'adminpanel/base_admin.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}Admin / Dashboard{% endblock %}
+
+{% block content %}
+<!-- KPI Grid -->
+<div class="admin-kpi-grid">
+  <div class="admin-kpi">
+    <span class="admin-kpi__icon"></span>
+    <div class="admin-kpi__value" data-count="{{ stats.total_users }}">{{ stats.total_users }}</div>
+    <div class="admin-kpi__label">Total Users</div>
+    <div class="admin-kpi__delta admin-kpi__delta--up">↑ {{ stats.new_users_week }} this week</div>
+  </div>
+  <div class="admin-kpi">
+    <span class="admin-kpi__icon"></span>
+    <div class="admin-kpi__value" data-count="{{ stats.active_services }}">{{ stats.active_services }}</div>
+    <div class="admin-kpi__label">Active Services</div>
+    <div class="admin-kpi__delta admin-kpi__delta--up">↑ {{ stats.new_services_month }} this month</div>
+  </div>
+  <div class="admin-kpi">
+    <span class="admin-kpi__icon"></span>
+    <div class="admin-kpi__value" data-count="{{ stats.total_providers }}">{{ stats.total_providers }}</div>
+    <div class="admin-kpi__label">Providers</div>
+    <div class="admin-kpi__delta" style="color:var(--text-muted)">Registered</div>
+  </div>
+  <div class="admin-kpi">
+    <span class="admin-kpi__icon"></span>
+    <div class="admin-kpi__value" data-count="{{ stats.total_reviews }}">{{ stats.total_reviews }}</div>
+    <div class="admin-kpi__label">Reviews</div>
+    <div class="admin-kpi__delta admin-kpi__delta--up">↑ {{ stats.new_reviews_week }} this week</div>
+  </div>
+</div>
+
+<!-- Two-column layout -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+  <!-- Recent Users -->
+  <div class="admin-panel">
+    <div class="admin-panel__header">
+      <div class="admin-panel__title"> Recent Users</div>
+      <a href="{% url 'adminpanel:user_list' %}" class="btn btn--outline btn--sm">View All</a>
+    </div>
+    <table class="admin-table">
+      <thead><tr><th>User</th><th>Role</th><th>Joined</th><th></th></tr></thead>
+      <tbody>
+        {% for user in recent_users %}
+          <tr>
+            <td>
+              <div class="td-main">{{ user.username }}</div>
+              <div style="font-size:0.75rem;color:var(--text-muted)">{{ user.email }}</div>
+            </td>
+            <td>
+              <span class="badge {% if user.role == 'provider' %}badge--blue{% elif user.role == 'admin' %}badge--gold{% else %}badge--gray{% endif %}">
+                {{ user.get_role_display }}
+              </span>
+            </td>
+            <td style="white-space:nowrap">{{ user.date_joined|date:"M d" }}</td>
+            <td>
+              {% if user.is_active %}
+                <span class="badge badge--green">Active</span>
+              {% else %}
+                <span class="badge badge--red">Inactive</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Top Categories -->
+  <div class="admin-panel">
+    <div class="admin-panel__header">
+      <div class="admin-panel__title">Top Categories</div>
+      <a href="{% url 'adminpanel:category_list' %}" class="btn btn--outline btn--sm">Manage</a>
+    </div>
+    <div class="admin-panel__body">
+      <div class="chart-bar-list">
+        {% for cat in top_categories %}
+          <div class="chart-bar-item">
+            <div class="chart-bar-label">{{ cat.icon }} {{ cat.name }}</div>
+            <div class="chart-bar-track">
+              <div class="chart-bar-fill" data-width="{% widthratio cat.count top_categories.0.count 100 %}"></div>
+            </div>
+            <div class="chart-bar-val">{{ cat.count }}</div>
+          </div>
+        {% empty %}
+          <p class="text-muted text-sm">No categories yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Services -->
+<div class="admin-panel" style="margin-bottom:20px">
+  <div class="admin-panel__header">
+    <div class="admin-panel__title"> Recent Services</div>
+    <a href="{% url 'adminpanel:service_list' %}" class="btn btn--outline btn--sm">View All</a>
+  </div>
+  <table class="admin-table">
+    <thead>
+      <tr><th>Title</th><th>Provider</th><th>Category</th><th>City</th><th>Price</th><th>Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for service in recent_services %}
+        <tr>
+          <td><a href="{% url 'services:service_detail' service.slug %}" class="td-main" target="_blank">{{ service.title|truncatechars:35 }}</a></td>
+          <td>{{ service.provider.username }}</td>
+          <td>{{ service.category.icon }} {{ service.category.name }}</td>
+          <td>{{ service.city }}</td>
+          <td style="color:var(--accent-lite);font-weight:600">₹{{ service.price }}</td>
+          <td>
+            <span class="badge {% if service.is_active %}badge--green{% else %}badge--red{% endif %}">
+              {% if service.is_active %}Active{% else %}Inactive{% endif %}
+            </span>
+            {% if service.is_featured %}<span class="badge badge--gold"></span>{% endif %}
+          </td>
+          <td>
+            <div class="td-actions">
+              <form method="post" action="{% url 'adminpanel:service_featured' service.pk %}">{% csrf_token %}<button type="submit" class="btn btn--outline btn--sm" title="Toggle Featured"></button></form>
+              <form method="post" action="{% url 'adminpanel:service_active' service.pk %}">{% csrf_token %}<button type="submit" class="btn btn--outline btn--sm" title="Toggle Active">{% if service.is_active %}{% else %}{% endif %}</button></form>
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Recent Reviews -->
+<div class="admin-panel">
+  <div class="admin-panel__header">
+    <div class="admin-panel__title"> Recent Reviews</div>
+    <a href="{% url 'adminpanel:review_list' %}" class="btn btn--outline btn--sm">View All</a>
+  </div>
+  <table class="admin-table">
+    <thead><tr><th>Reviewer</th><th>Service</th><th>Rating</th><th>Comment</th><th>Date</th></tr></thead>
+    <tbody>
+      {% for review in recent_reviews %}
+        <tr>
+          <td class="td-main">{{ review.reviewer.username }}</td>
+          <td>{{ review.service.title|truncatechars:30 }}</td>
+          <td>
+            <span style="color:var(--gold)">{% for i in "12345" %}{% if forloop.counter <= review.rating %}&#9733;{% endif %}{% endfor %}</span>
+          </td>
+          <td style="color:var(--text-muted)">{{ review.comment|truncatechars:40 }}</td>
+          <td style="white-space:nowrap">{{ review.created_at|date:"M d, Y" }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

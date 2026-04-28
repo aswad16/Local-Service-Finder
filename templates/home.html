@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}LocalServe — Home Services at Your Doorstep{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div>
+        <div class="hero__badge">
+          <span class="hero__badge-dot"></span>
+          AI-Powered &middot; Verified Professionals
+        </div>
+        <h1 class="hero__title">
+          Home services at<br>your <em>doorstep</em>
+        </h1>
+        <p class="hero__sub">
+          Find verified local professionals for repair, cleaning, beauty, tutoring and more. Book instantly, pay securely.
+        </p>
+        <form method="get" action="{% url 'search' %}">
+          <div class="search-bar">
+            <input type="text" name="q" placeholder="Search for a service..." autocomplete="off" />
+            <div class="search-bar__divider"></div>
+            <select name="category">
+              <option value="">All Categories</option>
+              {% for cat in categories %}
+                <option value="{{ cat.slug }}">{{ cat.icon }} {{ cat.name }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn--primary">Search</button>
+          </div>
+        </form>
+        <p style="margin-top:12px;font-size:0.78rem;color:var(--text-light)">
+          Popular:
+          <a href="{% url 'search' %}?q=electrician" style="color:var(--accent)">Electrician</a> &middot;
+          <a href="{% url 'search' %}?q=plumber" style="color:var(--accent)">Plumber</a> &middot;
+          <a href="{% url 'search' %}?q=cleaning" style="color:var(--accent)">House Cleaning</a> &middot;
+          <a href="{% url 'search' %}?q=ac" style="color:var(--accent)">AC Repair</a> &middot;
+          <a href="{% url 'search' %}?q=tutor" style="color:var(--accent)">Tutor</a>
+        </p>
+      </div>
+      <div class="hero__images">
+        <div class="hero__img hero__img--tall" style="background:linear-gradient(135deg,#e0f2fe,#bae6fd)">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#0369a1" stroke-width="1.2" xmlns="http://www.w3.org/2000/svg"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span style="font-size:0.8rem;color:#0369a1;font-weight:600;margin-top:10px">Home Repair</span>
+        </div>
+        <div class="hero__img" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe)">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4338ca" stroke-width="1.2" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          <span style="font-size:0.75rem;color:#4338ca;font-weight:600;margin-top:8px">Electrical</span>
+        </div>
+        <div class="hero__img" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0)">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="1.2" xmlns="http://www.w3.org/2000/svg"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+          <span style="font-size:0.75rem;color:#166534;font-weight:600;margin-top:8px">Plumbing</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="container">
+    <div class="stats-inner">
+      <div class="stat-item">
+        <span class="stat-item__num" data-count="{{ stats.providers }}">{{ stats.providers }}</span>
+        <span class="stat-item__label">Verified Providers</span>
+      </div>
+      <div class="stat-item" style="padding:0 32px;border-left:1px solid var(--border);border-right:1px solid var(--border)">
+        <span class="stat-item__num" data-count="{{ stats.services }}">{{ stats.services }}</span>
+        <span class="stat-item__label">Active Services</span>
+      </div>
+      <div class="stat-item" style="padding:0 32px;border-right:1px solid var(--border)">
+        <span class="stat-item__num" data-count="{{ stats.categories }}">{{ stats.categories }}</span>
+        <span class="stat-item__label">Categories</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-item__num" data-count="{{ stats.reviews }}">{{ stats.reviews }}</span>
+        <span class="stat-item__label">Reviews</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section section--white">
+  <div class="container">
+    <div class="section__header" style="text-align:center;justify-content:center;margin-bottom:40px">
+      <div>
+        <div class="section__title">How LocalServe Works</div>
+        <div class="section__sub">Simple. Fast. Reliable.</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px;text-align:center">
+      <div class="how-step">
+        <div class="how-step__icon" style="background:linear-gradient(135deg,#eff6ff,#dbeafe)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <div class="how-step__num">1</div>
+        <div class="how-step__title">Search a Service</div>
+        <div class="how-step__desc">Browse hundreds of verified local professionals by category, city, or keyword.</div>
+      </div>
+      <div class="how-step">
+        <div class="how-step__icon" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.93a19.8 19.8 0 01-3.07-8.67A2 2 0 012 1.27h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        </div>
+        <div class="how-step__num">2</div>
+        <div class="how-step__title">Contact Directly</div>
+        <div class="how-step__desc">Call, WhatsApp, or email the provider directly — no middleman, no waiting.</div>
+      </div>
+      <div class="how-step">
+        <div class="how-step__icon" style="background:linear-gradient(135deg,#fefce8,#fef9c3)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#a16207" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="how-step__num">3</div>
+        <div class="how-step__title">Review & Trust</div>
+        <div class="how-step__desc">Leave honest reviews and help others find the best providers in your city.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="section">
+  <div class="container">
+    <div class="section__header">
+      <div>
+        <div class="section__title">Browse by Category</div>
+        <div class="section__sub">Find the right professional for your needs</div>
+      </div>
+      <a href="{% url 'services:service_list' %}" class="btn btn--outline btn--sm">All Services →</a>
+    </div>
+    <div class="cat-grid">
+      {% for cat in categories %}
+        <a href="{% url 'services:service_list' %}?category={{ cat.slug }}" class="cat-card">
+          <div class="cat-card__emoji">{{ cat.icon }}</div>
+          <div class="cat-card__name">{{ cat.name }}</div>
+          <div class="cat-card__count">{{ cat.count }} service{{ cat.count|pluralize }}</div>
+        </a>
+      {% empty %}
+        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted)">
+          <p style="font-size:1.5rem;margin-bottom:8px">🔧</p>
+          <p>No categories yet. <a href="{% url 'users:register' %}" style="color:var(--accent)">Register as a provider</a> to add the first service!</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% if featured %}
+<!-- FEATURED SERVICES -->
+<section class="section section--white">
+  <div class="container">
+    <div class="section__header">
+      <div>
+        <div class="section__title">⭐ Featured Services</div>
+        <div class="section__sub">Hand-picked top providers</div>
+      </div>
+      <a href="{% url 'services:service_list' %}" class="btn btn--outline btn--sm">See All</a>
+    </div>
+    <div class="grid grid--3">
+      {% for service in featured %}
+        <a href="{% url 'services:service_detail' service.slug %}" class="card" style="display:block;text-decoration:none">
+          <div class="card__image">
+            {% if service.image %}
+              <img src="{{ service.image.url }}" alt="{{ service.title }}" loading="lazy" />
+            {% else %}
+              <div class="card__image-placeholder" style="font-size:2.5rem">{{ service.category.icon|default:'🔧' }}</div>
+            {% endif %}
+            <div class="card__image-badge">⭐ Featured</div>
+          </div>
+          <div class="card__body">
+            <div class="card__category">{{ service.category.icon }} {{ service.category.name }}</div>
+            <div class="card__title">{{ service.title }}</div>
+            <div class="card__desc">{{ service.description|truncatechars:80 }}</div>
+            <div class="card__meta">
+              <div>
+                <div class="card__price">₹{{ service.price }} <span class="card__price-type">/ {{ service.get_price_type_display }}</span></div>
+                {% if service.avg_rating %}
+                  <div class="stars" style="margin-top:3px">
+                    {% for i in "12345" %}<span class="star {% if forloop.counter > service.avg_rating %}star--empty{% endif %}">★</span>{% endfor %}
+                    <span class="rating-count">({{ service.review_count }})</span>
+                  </div>
+                {% endif %}
+              </div>
+              <span class="card__location">📍 {{ service.city }}</span>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- RECENT / MOST BOOKED -->
+<section class="section {% if not featured %}section--white{% endif %}">
+  <div class="container">
+    <div class="section__header">
+      <div>
+        <div class="section__title">Most Booked Services</div>
+        <div class="section__sub">Trusted by customers near you</div>
+      </div>
+      <a href="{% url 'services:service_list' %}" class="btn btn--outline btn--sm">See All</a>
+    </div>
+    <div class="grid grid--4">
+      {% for service in recent %}
+        <a href="{% url 'services:service_detail' service.slug %}" class="card" style="display:block;text-decoration:none">
+          <div class="card__image">
+            {% if service.image %}
+              <img src="{{ service.image.url }}" alt="{{ service.title }}" loading="lazy" />
+            {% else %}
+              <div class="card__image-placeholder" style="font-size:2rem">{{ service.category.icon|default:'🔧' }}</div>
+            {% endif %}
+          </div>
+          <div class="card__body">
+            <div class="card__category">{{ service.category.name }}</div>
+            <div class="card__title">{{ service.title }}</div>
+            {% if service.avg_rating %}
+              <div class="stars" style="margin-bottom:8px">
+                {% for i in "12345" %}<span class="star {% if forloop.counter > service.avg_rating %}star--empty{% endif %}">★</span>{% endfor %}
+                <span class="rating-count">{{ service.avg_rating }}</span>
+              </div>
+            {% endif %}
+            <div class="card__meta">
+              <span class="card__price">₹{{ service.price }}</span>
+              <span class="card__location">{{ service.city }}</span>
+            </div>
+          </div>
+        </a>
+      {% empty %}
+        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted)">
+          <p style="font-size:1.5rem;margin-bottom:8px">🛠</p>
+          <p>No services yet. <a href="{% url 'users:register' %}?role=provider" style="color:var(--accent)">Be the first provider!</a></p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- WHY LOCALSERVE -->
+{% if not request.user.is_authenticated %}
+<section class="section section--white">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center">
+      <div>
+        <div class="section__title" style="font-size:1.8rem">Why Choose us?</div>
+        <div style="margin-top:24px;display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;gap:14px;align-items:flex-start">
+            <div style="width:40px;height:40px;border-radius:var(--r-sm);background:var(--accent-soft);display:grid;place-items:center;flex-shrink:0;font-size:1.1rem">✓</div>
+            <div><div style="font-weight:700;margin-bottom:3px">Verified Real People</div><div style="color:var(--text-muted);font-size:0.875rem">Every provider is verified via phone OTP. No fake accounts.</div></div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start">
+            <div style="width:40px;height:40px;border-radius:var(--r-sm);background:#f0fdf4;display:grid;place-items:center;flex-shrink:0;font-size:1.1rem">🔒</div>
+            <div><div style="font-weight:700;margin-bottom:3px">Secure & Private</div><div style="color:var(--text-muted);font-size:0.875rem">Your data is safe. Contact providers directly without sharing your number publicly.</div></div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start">
+            <div style="width:40px;height:40px;border-radius:var(--r-sm);background:#fefce8;display:grid;place-items:center;flex-shrink:0;font-size:1.1rem">🤖</div>
+            <div><div style="font-weight:700;margin-bottom:3px">AI-Powered Matching</div><div style="color:var(--text-muted);font-size:0.875rem">Describe your problem, our AI recommends the best services for you.</div></div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start">
+            <div style="width:40px;height:40px;border-radius:var(--r-sm);background:#fdf2f8;display:grid;place-items:center;flex-shrink:0;font-size:1.1rem">🌐</div>
+            <div><div style="font-weight:700;margin-bottom:3px">Any Country, Any Language</div><div style="color:var(--text-muted);font-size:0.875rem">Register from anywhere in the world.</div></div>
+          </div>
+        </div>
+        <div style="margin-top:28px;display:flex;gap:12px">
+          <a href="{% url 'users:register' %}" class="btn btn--primary btn--lg">Get Started Free →</a>
+          <a href="{% url 'services:service_list' %}" class="btn btn--outline btn--lg">Browse Services</a>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="trust-card" style="background:linear-gradient(135deg,#eff6ff,#dbeafe)">
+          <div style="font-size:2rem;margin-bottom:8px">📱</div>
+          <div style="font-weight:700;font-size:0.9rem;color:#1d4ed8">WhatsApp Contact</div>
+          <div style="font-size:0.78rem;color:#1e40af;margin-top:4px">Message providers directly on WhatsApp</div>
+        </div>
+        <div class="trust-card" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7)">
+          <div style="font-size:2rem;margin-bottom:8px">✓</div>
+          <div style="font-weight:700;font-size:0.9rem;color:#166534">Phone Verified</div>
+          <div style="font-size:0.78rem;color:#15803d;margin-top:4px">All providers verified </div>
+        </div>
+        <div class="trust-card" style="background:linear-gradient(135deg,#fefce8,#fef9c3)">
+          <div style="font-size:2rem;margin-bottom:8px">⭐</div>
+          <div style="font-weight:700;font-size:0.9rem;color:#a16207">Honest Reviews</div>
+          <div style="font-size:0.78rem;color:#92400e;margin-top:4px">Real feedback from real customers</div>
+        </div>
+        <div class="trust-card" style="background:linear-gradient(135deg,#fdf2f8,#fce7f3)">
+          <div style="font-size:2rem;margin-bottom:8px">🤖</div>
+          <div style="font-weight:700;font-size:0.9rem;color:#9d174d">AI Recommendations</div>
+          <div style="font-size:0.78rem;color:#831843;margin-top:4px">Claude AI suggests the best match</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- AI CTA -->
+<section style="background:linear-gradient(135deg,var(--accent),#1e40af);padding:60px 0">
+  <div class="container" style="text-align:center">
+    <div style="width:56px;height:56px;background:rgba(255,255,255,0.15);border-radius:var(--r-lg);display:grid;place-items:center;margin:0 auto 20px;font-size:1.6rem">🤖</div>
+    <h2 style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;color:#fff;margin-bottom:12px;letter-spacing:-0.4px">
+      Not sure what you need?
+    </h2>
+    <p style="color:rgba(255,255,255,0.85);margin-bottom:28px;max-width:440px;margin-left:auto;margin-right:auto;font-size:0.96rem;line-height:1.7">
+      Describe your problem in plain language and Claude AI will recommend the best local services for you.
+    </p>
+    <a href="{% url 'ai_recommend' %}" class="btn" style="background:white;color:var(--accent);font-weight:700;padding:14px 32px;border-radius:var(--r-md);font-size:1rem">
+      Try AI Recommendations →
+    </a>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.cat-card__emoji { font-size:2rem; margin-bottom:8px; }
+.how-step { padding:28px 20px; }
+.how-step__icon { width:64px; height:64px; border-radius:var(--r-lg); display:grid; place-items:center; margin:0 auto 16px; }
+.how-step__icon svg { width:28px; height:28px; }
+.how-step__num { font-family:var(--font-head); font-size:0.7rem; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px; }
+.how-step__title { font-family:var(--font-head); font-size:1.05rem; font-weight:700; color:var(--text-primary); margin-bottom:10px; }
+.how-step__desc { font-size:0.875rem; color:var(--text-muted); line-height:1.7; }
+.card__image-badge { position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.92); color:var(--gold); font-size:0.7rem; font-weight:700; padding:3px 8px; border-radius:var(--r-full); backdrop-filter:blur(4px); }
+.card__image { position:relative; }
+.trust-card { padding:20px; border-radius:var(--r-lg); border:1px solid rgba(255,255,255,0.6); }
+@media(max-width:768px) {
+  .how-step { padding:20px 10px; }
+  [style*="grid-template-columns:repeat(3,1fr)"] { grid-template-columns:1fr !important; }
+  [style*="grid-template-columns:1fr 1fr;gap:48px"] { grid-template-columns:1fr !important; }
+  [style*="grid-template-columns:1fr 1fr;gap:14px"] { grid-template-columns:1fr 1fr !important; }
+}
+</style>
+{% endblock %}

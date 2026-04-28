@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ provider.get_full_name|default:provider.username }} — Provider{% endblock %}
+
+{% block content %}
+<div class="provider-hero">
+  <div class="container">
+    <div class="profile-card">
+      <div class="profile-avatar" style="width:110px;height:110px;font-size:3rem">
+        {% if provider.avatar %}
+          <img src="{{ provider.avatar.url }}" alt="{{ provider.username }}" />
+        {% else %}
+          {{ provider.username|first|upper }}
+        {% endif %}
+      </div>
+      <div style="flex:1">
+        <div class="profile-name">
+          {{ provider.get_full_name|default:provider.username }}
+          {% if provider.is_verified %}<span style="color:var(--success);font-size:1rem" title="Verified"></span>{% endif %}
+        </div>
+        <span class="profile-role profile-role--provider">Service Provider</span>
+        {% if provider.city %}
+          <div style="color:var(--text-muted);font-size:0.875rem;margin-top:8px">
+            {{ provider.city }}{% if provider.state %}, {{ provider.state }}{% endif %}
+          </div>
+        {% endif %}
+        {% if provider.bio %}
+          <p style="color:var(--text-secondary);margin-top:12px;max-width:560px;font-size:0.9rem;line-height:1.7">{{ provider.bio }}</p>
+        {% endif %}
+        <div style="display:flex;gap:20px;margin-top:16px">
+          <div>
+            <span style="font-family:var(--font-head);font-size:1.5rem;font-weight:800;color:var(--accent-lite)">{{ services.count }}</span>
+            <span style="color:var(--text-muted);font-size:0.8rem;margin-left:6px">Services</span>
+          </div>
+          <div>
+            <span style="font-family:var(--font-head);font-size:1.5rem;font-weight:800;color:var(--gold)">{{ reviews.count }}</span>
+            <span style="color:var(--text-muted);font-size:0.8rem;margin-left:6px">Reviews</span>
+          </div>
+          <div>
+            <span style="font-family:var(--font-head);font-size:1.5rem;font-weight:800;color:var(--text-primary)">{{ provider.date_joined|date:"Y" }}</span>
+            <span style="color:var(--text-muted);font-size:0.8rem;margin-left:6px">Member since</span>
+          </div>
+        </div>
+      </div>
+      {% if provider.phone %}
+        <div style="text-align:right">
+          <a href="tel:{{ provider.phone }}" class="btn btn--primary">{{ provider.phone }}</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container section">
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:32px;align-items:start">
+    <div>
+      <!-- Services -->
+      <div class="section__header" style="margin-bottom:20px">
+        <h2 class="section__title">Services <span>Offered</span></h2>
+      </div>
+
+      {% if services %}
+        <div class="grid grid--2" style="margin-bottom:48px">
+          {% for service in services %}
+            <a href="{% url 'services:service_detail' service.slug %}" class="card" style="display:block;text-decoration:none">
+              <div class="card__image">
+                {% if service.image %}
+                  <img src="{{ service.image.url }}" alt="{{ service.title }}" loading="lazy" />
+                {% else %}
+                  <div class="card__image-placeholder">{{ service.category.icon|default:'' }}</div>
+                {% endif %}
+                {% if service.is_featured %}<span class="card__badge card__badge--gold">Featured</span>{% endif %}
+              </div>
+              <div class="card__body">
+                <div class="card__category">{{ service.category.name }}</div>
+                <div class="card__title">{{ service.title }}</div>
+                <div class="card__desc">{{ service.description|truncatechars:80 }}</div>
+                <div class="card__meta">
+                  <div>
+                    <div class="card__price">₹{{ service.price }} <span class="card__price-type">/ {{ service.get_price_type_display }}</span></div>
+                    {% if service.avg_rating %}
+                      <div class="stars" style="margin-top:4px">
+                        {% for i in "12345" %}
+                          <span class="star {% if forloop.counter > service.avg_rating %}star--empty{% endif %}">&#9733;</span>
+                        {% endfor %}
+                        <span class="rating-count">({{ service.review_count }})</span>
+                      </div>
+                    {% endif %}
+                  </div>
+                  <span class="card__location">{{ service.city }}</span>
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state" style="padding:40px 0">
+          <div class="empty-state__icon"></div>
+          <div class="empty-state__title">No active services</div>
+        </div>
+      {% endif %}
+
+      <!-- Reviews -->
+      {% if reviews %}
+        <h2 class="section__title" style="margin-bottom:20px">Customer <span>Reviews</span></h2>
+        {% for review in reviews %}
+          <div class="review-card">
+            <div class="review-card__header">
+              <div class="review-avatar">{{ review.reviewer.username|first|upper }}</div>
+              <div>
+                <div class="review-name">{{ review.reviewer.username }}</div>
+                <div class="review-date">{{ review.created_at|date:"M d, Y" }} · {{ review.service.title }}</div>
+              </div>
+              <div class="stars" style="margin-left:auto">
+                {% for i in "12345" %}
+                  <span class="star {% if forloop.counter > review.rating %}star--empty{% endif %}">&#9733;</span>
+                {% endfor %}
+              </div>
+            </div>
+            {% if review.title %}<div style="font-weight:600;font-size:0.9rem;margin-bottom:6px">{{ review.title }}</div>{% endif %}
+            <div class="review-comment">{{ review.comment }}</div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div style="position:sticky;top:88px">
+      <div class="card" style="padding:22px;margin-bottom:16px">
+        <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:16px;font-weight:600">Contact Info</div>
+        {% if provider.phone %}
+          <a href="tel:{{ provider.phone }}" style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:10px;color:var(--text-secondary);transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+            <span></span><span>{{ provider.phone }}</span>
+          </a>
+        {% endif %}
+        {% if provider.location %}
+          <div style="font-size:0.875rem;color:var(--text-secondary);padding:8px 0">{{ provider.location }}</div>
+        {% endif %}
+        {% if not provider.phone and not provider.location %}
+          <p style="color:var(--text-muted);font-size:0.85rem">No contact info provided.</p>
+        {% endif %}
+      </div>
+
+      <div class="card" style="padding:22px">
+        <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:14px;font-weight:600">Provider Stats</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;justify-content:space-between;font-size:0.875rem">
+            <span style="color:var(--text-muted)">Member since</span>
+            <span>{{ provider.date_joined|date:"M Y" }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.875rem">
+            <span style="color:var(--text-muted)">Services</span>
+            <span style="color:var(--accent-lite);font-weight:600">{{ services.count }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.875rem">
+            <span style="color:var(--text-muted)">Reviews</span>
+            <span style="color:var(--gold);font-weight:600">{{ reviews.count }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.875rem">
+            <span style="color:var(--text-muted)">Verified</span>
+            <span>{% if provider.is_verified %} Yes{% else %} No{% endif %}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

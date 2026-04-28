@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Sign In — LocalServe{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-card__logo">Local<span>Serve</span></div>
+    <div class="auth-card__sub">Find trusted local services</div>
+    <h1 class="auth-card__title">Welcome back</h1>
+
+    <form method="post" id="login-form">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+          <div class="form-error">{{ form.username.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group" style="margin-top:14px">
+        <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
+        <div style="position:relative">
+          {{ form.password }}
+          <button type="button" id="togglePw" onclick="togglePassword()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.8rem">Show</button>
+        </div>
+        {% if form.password.errors %}
+          <div class="form-error">{{ form.password.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="message message--error" style="margin-top:12px">
+          {{ form.non_field_errors.0 }}
+        </div>
+      {% endif %}
+
+      <button type="submit" class="btn btn--primary btn--block btn--lg" style="margin-top:20px">
+        Sign In →
+      </button>
+    </form>
+
+    <div class="auth-divider">or</div>
+
+    <div style="background:var(--bg-elevated);border-radius:var(--r-md);padding:16px;margin-bottom:20px;border:1px solid var(--border)">
+      <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">New here? Join as:</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <a href="{% url 'users:register' %}?role=customer"
+           class="join-role-btn">
+          <span style="font-size:1.5rem;display:block;margin-bottom:6px">🛒</span>
+          <span style="font-size:0.85rem;font-weight:700;display:block">Customer</span>
+          <span style="font-size:0.72rem;color:var(--text-muted);display:block">Find services</span>
+        </a>
+        <a href="{% url 'users:register' %}?role=provider"
+           class="join-role-btn">
+          <span style="font-size:1.5rem;display:block;margin-bottom:6px">🔧</span>
+          <span style="font-size:0.85rem;font-weight:700;display:block">Provider</span>
+          <span style="font-size:0.72rem;color:var(--text-muted);display:block">Offer services</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="auth-footer">
+      Don't have an account? <a href="{% url 'users:register' %}" style="color:var(--accent);font-weight:600">Sign up free →</a>
+    </div>
+  </div>
+</div>
+
+<style>
+.join-role-btn {
+  display:block; padding:14px 10px; border:1.5px solid var(--border);
+  border-radius:var(--r-md); text-align:center; transition:all 0.2s;
+  color:var(--text-secondary); text-decoration:none;
+}
+.join-role-btn:hover {
+  border-color:var(--accent); color:var(--accent);
+  background:var(--accent-soft); transform:translateY(-1px);
+}
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword() {
+  const pw = document.getElementById('{{ form.password.id_for_label }}');
+  const btn = document.getElementById('togglePw');
+  if (pw.type === 'password') { pw.type = 'text'; btn.textContent = 'Hide'; }
+  else { pw.type = 'password'; btn.textContent = 'Show'; }
+}
+</script>
+{% endblock %}

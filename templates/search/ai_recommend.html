@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block title %}AI Service Recommendations — LocalServe{% endblock %}
+
+{% block content %}
+<div class="container section" style="max-width:820px">
+
+  <!-- Header -->
+  <div style="text-align:center;margin-bottom:40px">
+    <div style="width:72px;height:72px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:20px;display:grid;place-items:center;font-size:2rem;margin:0 auto 16px;box-shadow:0 8px 24px rgba(59,130,246,0.3)">AI</div>
+    <h1 style="font-family:var(--font-head);font-size:2.2rem;font-weight:800;letter-spacing:-1px;margin-bottom:10px">
+      AI-Powered <span style="color:var(--accent)">Recommendations</span>
+    </h1>
+    <p style="color:var(--text-secondary);max-width:480px;margin:0 auto;font-size:0.95rem;line-height:1.7">
+      Describe what you need in plain language — Claude AI will find the best matching services for you.
+    </p>
+  </div>
+
+  <!-- Search form -->
+  <div class="card" style="padding:28px 32px;margin-bottom:32px;border:1.5px solid rgba(59,130,246,0.2);box-shadow:0 4px 20px rgba(59,130,246,0.08)">
+    <form method="get" action="{% url 'ai_recommend' %}" id="ai-form">
+      <div class="form-group" style="margin-bottom:16px">
+        <label class="form-label" style="font-size:1rem;font-weight:700">What do you need?</label>
+        <textarea name="need" class="form-input" rows="3"
+          placeholder="e.g. My AC is not cooling properly, need urgent repair today in Raipur..."
+          style="font-size:1rem;resize:vertical">{{ user_need }}</textarea>
+        <div class="form-help">Be specific about your location, urgency, and problem for better results.</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button type="submit" class="btn btn--primary btn--lg" id="ai-submit-btn">
+          Get AI Recommendations
+        </button>
+        {% if user_need %}
+          <a href="{% url 'ai_recommend' %}" class="btn btn--outline">&times; Clear</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- Example chips (only shown before search) -->
+  {% if not user_need %}
+  <div style="margin-bottom:36px">
+    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;margin-bottom:12px"> Try these examples:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:9px">
+      <button onclick="fillNeed('My AC is not cooling properly, need urgent repair')" class="example-chip">AC not cooling</button>
+      <button onclick="fillNeed('I need a math tutor for my Class 10 kid in Raipur')" class="example-chip">Math tutor Class 10</button>
+      <button onclick="fillNeed('Help with painting 3 rooms in my house')" class="example-chip">House painting 3 rooms</button>
+      <button onclick="fillNeed('Electrician to fix wiring issues urgently')" class="example-chip">Fix electrical wiring</button>
+      <button onclick="fillNeed('Need a driver for airport pickup tomorrow morning')" class="example-chip">Airport pickup driver</button>
+      <button onclick="fillNeed('Plumber for bathroom pipe leak repair today')" class="example-chip"> Plumber pipe leak</button>
+      <button onclick="fillNeed('Deep cleaning service for my 2BHK apartment')" class="example-chip">2BHK deep cleaning</button>
+      <button onclick="fillNeed('Need a cook for daily cooking Mon–Fri')" class="example-chip">Daily cook</button>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- AI Results -->
+  {% if user_need %}
+  <div>
+    <!-- AI header with loading state -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:16px 20px;background:var(--accent-soft);border-radius:var(--r-md);border:1px solid rgba(59,130,246,0.2)">
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:8px;display:grid;place-items:center;font-size:1rem;flex-shrink:0">AI</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:0.95rem;color:var(--text-primary)">Claude AI Analysis</div>
+        <div style="color:var(--text-muted);font-size:0.8rem">Based on: "<em>{{ user_need|truncatechars:70 }}</em>"</div>
+      </div>
+      {% if services %}
+        <span class="badge badge--blue">{{ services|length }} match{{ services|length|pluralize:"es" }}</span>
+      {% endif %}
+    </div>
+
+    {% if services %}
+      <div class="grid grid--2" style="gap:18px">
+        {% for service in services %}
+          <a href="{% url 'services:service_detail' service.slug %}" class="card" style="display:block;text-decoration:none;border:1.5px solid rgba(59,130,246,0.15);transition:all 0.2s">
+            <div class="card__image">
+              {% if service.image %}
+                <img src="{{ service.image.url }}" alt="{{ service.title }}" loading="lazy" />
+              {% else %}
+                <div class="card__image-placeholder">{{ service.category.icon|default:'' }}</div>
+              {% endif %}
+              <span class="card__badge" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6)">AI Pick</span>
+            </div>
+            <div class="card__body">
+              <div class="card__category">{{ service.category.name }}</div>
+              <div class="card__title">{{ service.title }}</div>
+              <div class="card__desc">{{ service.description|truncatechars:80 }}</div>
+              <div class="card__meta">
+                <div>
+                  <div class="card__price">₹{{ service.price }} <span class="card__price-type">/ {{ service.get_price_type_display }}</span></div>
+                  {% if service.avg_rating %}
+                    <div class="stars" style="margin-top:4px">
+                      {% for i in "12345" %}
+                        <span class="star {% if forloop.counter > service.avg_rating %}star--empty{% endif %}">&#9733;</span>
+                      {% endfor %}
+                      <span class="rating-count">({{ service.review_count }})</span>
+                    </div>
+                  {% endif %}
+                </div>
+                <span class="card__location">{{ service.city }}</span>
+              </div>
+              {% if service.provider.whatsapp_no %}
+                <div style="margin-top:10px">
+                  <a href="https://wa.me/{{ service.provider.whatsapp_no|cut:'+' }}" target="_blank" onclick="event.stopPropagation()" class="whatsapp-btn" style="font-size:0.76rem;padding:5px 12px">
+                    WhatsApp Provider
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+
+      <div style="margin-top:24px;padding:16px 20px;background:var(--bg-hover);border-radius:var(--r-md);font-size:0.84rem;color:var(--text-muted);display:flex;align-items:center;gap:10px">
+         <span>Not finding what you need? <a href="{% url 'search' %}?q={{ user_need|urlencode }}" style="color:var(--accent);font-weight:600">Try regular search</a> or <a href="{% url 'services:service_list' %}" style="color:var(--accent);font-weight:600">browse all services</a>.</span>
+      </div>
+
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state__icon"></div>
+        <div class="empty-state__title">No exact matches found</div>
+        <div class="empty-state__desc">Claude couldn't find services matching your description in the current listings. Try rephrasing or browse manually.</div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+          <a href="{% url 'services:service_list' %}" class="btn btn--outline">Browse All Services</a>
+          <a href="{% url 'search' %}?q={{ user_need|urlencode }}" class="btn btn--primary">Search Instead &rarr;</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- How it works (shown before search) -->
+  {% if not user_need %}
+  <div style="margin-top:16px">
+    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;margin-bottom:16px;text-align:center">How it works</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <div class="card" style="padding:20px;text-align:center">
+        <div style="font-size:2rem;margin-bottom:10px">️</div>
+        <div style="font-weight:700;font-size:0.9rem;margin-bottom:6px;color:var(--text-primary)">Describe Your Need</div>
+        <div style="font-size:0.8rem;color:var(--text-muted)">Write in plain language — no need for specific keywords</div>
+      </div>
+      <div class="card" style="padding:20px;text-align:center">
+        <div style="font-size:2rem;margin-bottom:10px">AI</div>
+        <div style="font-weight:700;font-size:0.9rem;margin-bottom:6px;color:var(--text-primary)">Claude Analyzes</div>
+        <div style="font-size:0.8rem;color:var(--text-muted)">AI matches your need with the most relevant local services</div>
+      </div>
+      <div class="card" style="padding:20px;text-align:center">
+        <div style="font-size:2rem;margin-bottom:10px"></div>
+        <div style="font-weight:700;font-size:0.9rem;margin-bottom:6px;color:var(--text-primary)">Get Results</div>
+        <div style="font-size:0.8rem;color:var(--text-muted)">Top recommended services ranked by relevance</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function fillNeed(text) {
+  const ta = document.querySelector('textarea[name="need"]');
+  ta.value = text;
+  ta.focus();
+  ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// Loading state on submit
+document.getElementById('ai-form')?.addEventListener('submit', function() {
+  const btn = document.getElementById('ai-submit-btn');
+  if (btn) {
+    btn.textContent = ' Claude is thinking...';
+    btn.disabled = true;
+  }
+});
+</script>
+{% endblock %}

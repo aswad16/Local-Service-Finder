@@ -1,0 +1,30 @@
+{% extends 'adminpanel/base_admin.html' %}
+{% block title %}{{ action }} Category{% endblock %}
+{% block page_title %}{{ action }} Category{% endblock %}
+{% block breadcrumb %}Admin / Categories / {{ action }}{% endblock %}
+
+{% block content %}
+<div class="admin-panel" style="max-width:560px">
+  <div class="admin-panel__header">
+    <div class="admin-panel__title">{{ action }} Category</div>
+  </div>
+  <form method="post" style="padding:24px 20px;display:flex;flex-direction:column;gap:16px">
+    {% csrf_token %}
+    {% for field in form %}
+      <div>
+        <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-muted)">
+          {{ field.label }}{% if field.field.required %} *{% endif %}
+        </label>
+        {{ field }}
+        {% if field.errors %}
+          <div style="color:var(--danger);font-size:0.8rem;margin-top:4px">{{ field.errors|join:", " }}</div>
+        {% endif %}
+      </div>
+    {% endfor %}
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button type="submit" class="btn btn--primary">{{ action }} Category</button>
+      <a href="{% url 'adminpanel:category_list' %}" class="btn btn--outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

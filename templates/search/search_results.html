@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block title %}{% if query %}Search: {{ query }}{% else %}Search Services{% endif %} — LocalServe{% endblock %}
+
+{% block content %}
+<div class="search-header">
+  <div class="container">
+    {% if query %}
+      <div class="search-query-display">Results for "<span>{{ query }}</span>"</div>
+    {% else %}
+      <div class="search-query-display">Browse <span>All Services</span></div>
+    {% endif %}
+    <div class="search-count">{{ results_count }} result{{ results_count|pluralize }} found</div>
+  </div>
+</div>
+
+<div class="container section--sm">
+  <!-- AI Tips -->
+  {% if ai_suggestions %}
+    <div class="ai-tips">
+      <div class="ai-tips__header">
+        <div class="ai-tips__icon">AI</div>
+        Claude AI Suggestions
+      </div>
+      <ul class="ai-tips__list">
+        {% for tip in ai_suggestions %}
+          <li>{{ tip }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <div class="search-layout">
+    <!-- Filters -->
+    <aside class="search-filters">
+      <form method="get" action="{% url 'search' %}">
+        <div class="filter-title">Search</div>
+        <input type="text" name="q" value="{{ query }}" class="form-input" placeholder="Keywords..." style="font-size:0.85rem;padding:9px 12px;margin-bottom:12px" />
+
+        <div class="filter-title">Category</div>
+        <select name="category" class="form-input" style="font-size:0.85rem;padding:9px 12px;margin-bottom:12px">
+          <option value="">All Categories</option>
+          {% for cat in categories %}
+            <option value="{{ cat.slug }}" {% if category_slug == cat.slug %}selected{% endif %}>{{ cat.icon }} {{ cat.name }}</option>
+          {% endfor %}
+        </select>
+
+        <div class="filter-title">City</div>
+        <input type="text" name="city" value="{{ city }}" class="form-input" placeholder="e.g. Mumbai" style="font-size:0.85rem;padding:9px 12px;margin-bottom:12px" />
+
+        <div class="filter-title">Price Range (₹)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <input type="number" name="min_price" value="{{ min_price }}" class="form-input" placeholder="Min" style="font-size:0.85rem;padding:9px 12px" />
+          <input type="number" name="max_price" value="{{ max_price }}" class="form-input" placeholder="Max" style="font-size:0.85rem;padding:9px 12px" />
+        </div>
+
+        <div class="filter-title">Sort By</div>
+        <select name="sort" class="form-input" style="font-size:0.85rem;padding:9px 12px;margin-bottom:16px">
+          <option value="recent" {% if sort_by == 'recent' %}selected{% endif %}>Most Recent</option>
+          <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+          <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+          <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Highest Rated</option>
+          <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
+        </select>
+
+        <button type="submit" class="btn btn--primary btn--block">Apply Filters</button>
+        <a href="{% url 'search' %}" class="btn btn--outline btn--block" style="margin-top:8px">Clear All</a>
+      </form>
+
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+        <div class="filter-title">AI Recommendations</div>
+        <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:10px">Describe what you need and let AI find the best matches.</p>
+        <a href="{% url 'ai_recommend' %}" class="btn btn--outline btn--block btn--sm">Try AI Picks</a>
+      </div>
+    </aside>
+
+    <!-- Results grid -->
+    <div>
+      {% if services %}
+        <div class="grid grid--3">
+          {% for service in services %}
+            <a href="{% url 'services:service_detail' service.slug %}" class="card" style="display:block;text-decoration:none">
+              <div class="card__image">
+                {% if service.image %}
+                  <img src="{{ service.image.url }}" alt="{{ service.title }}" loading="lazy" />
+                {% else %}
+                  <div class="card__image-placeholder">{{ service.category.icon|default:'' }}</div>
+                {% endif %}
+                {% if service.is_featured %}<span class="card__badge card__badge--gold"></span>{% endif %}
+              </div>
+              <div class="card__body">
+                <div class="card__category">{{ service.category.name }}</div>
+                <div class="card__title">{{ service.title }}</div>
+                <div class="card__desc">{{ service.description|truncatechars:75 }}</div>
+                <div class="card__meta">
+                  <div>
+                    <div class="card__price">₹{{ service.price }} <span class="card__price-type">/ {{ service.get_price_type_display }}</span></div>
+                    {% if service.avg_rating %}
+                      <div class="stars" style="margin-top:4px">
+                        {% for i in "12345" %}
+                          <span class="star {% if forloop.counter > service.avg_rating %}star--empty{% endif %}">&#9733;</span>
+                        {% endfor %}
+                        <span class="rating-count">({{ service.review_count }})</span>
+                      </div>
+                    {% endif %}
+                  </div>
+                  <span class="card__location">{{ service.city }}</span>
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state__icon"></div>
+          <div class="empty-state__title">No results found</div>
+          <div class="empty-state__desc">
+            {% if query %}No services match "{{ query }}". Try different keywords or browse all categories.{% else %}No services match your filters.{% endif %}
+          </div>
+          <div style="display:flex;gap:10px;justify-content:center;margin-top:20px">
+            <a href="{% url 'search' %}" class="btn btn--outline">Clear Filters</a>
+            <a href="{% url 'ai_recommend' %}" class="btn btn--primary">Ask AI</a>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

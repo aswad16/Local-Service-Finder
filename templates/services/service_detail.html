@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ service.title }} — LocalServe{% endblock %}
+
+{% block content %}
+<div class="container section">
+  <div style="display:grid;grid-template-columns:1fr 320px;gap:32px;align-items:start">
+    <!-- Main content -->
+    <div>
+      <!-- Breadcrumb -->
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:20px">
+        <a href="{% url 'home' %}" style="color:var(--text-muted)">Home</a> /
+        <a href="{% url 'services:service_list' %}" style="color:var(--text-muted)">Services</a> /
+        <span style="color:var(--text-primary)">{{ service.title|truncatechars:30 }}</span>
+      </div>
+
+      <!-- Image -->
+      <div style="border-radius:var(--radius-lg);overflow:hidden;margin-bottom:28px;aspect-ratio:16/7;background:var(--bg-elevated)">
+        {% if service.image %}
+          <img src="{{ service.image.url }}" alt="{{ service.title }}" style="width:100%;height:100%;object-fit:cover" />
+        {% else %}
+          <div style="width:100%;height:100%;display:grid;place-items:center;font-size:5rem">{{ service.category.icon|default:'' }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Title & meta -->
+      <div style="margin-bottom:24px">
+        <div style="font-size:0.8rem;color:var(--accent-lite);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:8px">
+          {{ service.category.icon }} {{ service.category.name }}
+        </div>
+        <h1 style="font-family:var(--font-head);font-size:2rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:12px">{{ service.title }}</h1>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          {% if service.avg_rating %}
+            <div class="stars">
+              {% for i in "12345" %}
+                <span class="star {% if forloop.counter > service.avg_rating %}star--empty{% endif %}">&#9733;</span>
+              {% endfor %}
+              <span class="rating-count">{{ service.avg_rating }} ({{ service.review_count }} review{{ service.review_count|pluralize }})</span>
+            </div>
+          {% endif %}
+          <span style="color:var(--text-muted);font-size:0.85rem">{{ service.city }}{% if service.state %}, {{ service.state }}{% endif %}</span>
+          <span style="color:var(--text-muted);font-size:0.85rem">{{ service.views_count }} views</span>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:24px;margin-bottom:24px">
+        <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:600;margin-bottom:12px">About This Service</div>
+        <p style="color:var(--text-secondary);line-height:1.8;white-space:pre-line">{{ service.description }}</p>
+      </div>
+
+      <!-- Reviews Section -->
+      <div id="reviews">
+        <div class="section__header" style="margin-bottom:20px">
+          <h2 class="section__title">Reviews <span>({{ service.review_count }})</span></h2>
+        </div>
+
+        {% if reviews %}
+          {% for review in reviews %}
+            <div class="review-card">
+              <div class="review-card__header">
+                <div class="review-avatar">{{ review.reviewer.username|first|upper }}</div>
+                <div>
+                  <div class="review-name">{{ review.reviewer.username }}</div>
+                  <div class="review-date">{{ review.created_at|date:"M d, Y" }}</div>
+                </div>
+                <div class="stars" style="margin-left:auto">
+                  {% for i in "12345" %}
+                    <span class="star {% if forloop.counter > review.rating %}star--empty{% endif %}">&#9733;</span>
+                  {% endfor %}
+                </div>
+                {% if request.user == review.reviewer %}
+                  <form method="post" action="{% url 'delete_review' review.pk %}" onsubmit="return confirm('Delete your review?')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--danger btn--sm">Delete</button>
+                  </form>
+                {% endif %}
+              </div>
+              {% if review.title %}<div style="font-weight:600;margin-bottom:6px;font-size:0.9rem">{{ review.title }}</div>{% endif %}
+              <div class="review-comment">{{ review.comment }}</div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state" style="padding:32px 0">
+            <div class="empty-state__icon"></div>
+            <div class="empty-state__title">No reviews yet</div>
+            <div class="empty-state__desc">Be the first to review this service.</div>
+          </div>
+        {% endif %}
+
+        <!-- Add Review -->
+        {% if user.is_authenticated and user != service.provider and not user_review %}
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:24px;margin-top:24px">
+            <div style="font-family:var(--font-head);font-size:1.1rem;font-weight:700;margin-bottom:20px">Leave a Review</div>
+            <form method="post" action="{% url 'add_review' service.slug %}">
+              {% csrf_token %}
+              <div class="form-group">
+                <label class="form-label">Your Rating</label>
+                <div id="star-display" style="display:flex;gap:6px;margin-bottom:10px"></div>
+                <select name="rating" id="id_rating" class="form-input" style="display:none">
+                  <option value="1">1 Star</option>
+                  <option value="2">2 Stars</option>
+                  <option value="3">3 Stars</option>
+                  <option value="4">4 Stars</option>
+                  <option value="5" selected>5 Stars</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Title (optional)</label>
+                <input type="text" name="title" class="form-input" placeholder="Summarise your experience" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Your Review</label>
+                <textarea name="comment" class="form-input" rows="4" placeholder="Share details about your experience..." required></textarea>
+              </div>
+              <button type="submit" class="btn btn--primary">Submit Review</button>
+            </form>
+          </div>
+        {% elif not user.is_authenticated %}
+          <div style="text-align:center;padding:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);margin-top:20px">
+            <p style="color:var(--text-secondary);margin-bottom:14px">Sign in to leave a review</p>
+            <a href="{% url 'users:login' %}?next={{ request.path }}" class="btn btn--primary">Sign In to Review</a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Related Services -->
+      {% if related %}
+        <div class="section__header" style="margin-top:40px;margin-bottom:20px">
+          <h2 class="section__title">Similar <span>Services</span></h2>
+        </div>
+        <div class="grid grid--2">
+          {% for s in related %}
+            <a href="{% url 'services:service_detail' s.slug %}" class="card" style="display:block;text-decoration:none">
+              <div class="card__image">
+                {% if s.image %}
+                  <img src="{{ s.image.url }}" alt="{{ s.title }}" loading="lazy" />
+                {% else %}
+                  <div class="card__image-placeholder">{{ s.category.icon|default:'' }}</div>
+                {% endif %}
+              </div>
+              <div class="card__body">
+                <div class="card__title">{{ s.title }}</div>
+                <div class="card__meta">
+                  <span class="card__price">₹{{ s.price }}</span>
+                  <span class="card__location">{{ s.city }}</span>
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Sticky sidebar -->
+    <aside style="position:sticky;top:88px">
+      <!-- Price card -->
+      <div class="card" style="padding:24px;margin-bottom:16px">
+        <div style="font-family:var(--font-head);font-size:2.2rem;font-weight:800;color:var(--accent-lite);letter-spacing:-1px">
+          ₹{{ service.price }}
+        </div>
+        <div style="color:var(--text-muted);font-size:0.85rem;margin-bottom:20px">per {{ service.get_price_type_display }}</div>
+
+        {% if service.phone %}
+          <a href="tel:{{ service.phone }}" class="btn btn--primary btn--block btn--lg" style="margin-bottom:10px">📞 Call Now</a>
+        {% endif %}
+        {% if service.provider.whatsapp_no %}
+          <a href="https://wa.me/{{ service.provider.whatsapp_no|cut:'+' }}?text=Hi%2C%20I%20found%20your%20service%20%22{{ service.title|urlencode }}%22%20on%20LocalServe%20and%20I%27m%20interested." target="_blank" class="btn btn--block btn--lg" style="background:#25D366;color:white;margin-bottom:10px">
+            <svg style="width:18px;height:18px;fill:white;flex-shrink:0" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.997 0C5.375 0 0 5.376 0 12c0 2.116.554 4.099 1.523 5.822L0 24l6.335-1.496A11.955 11.955 0 0012 24c6.624 0 12-5.376 12-12S18.621 0 11.997 0zm.003 21.818a9.815 9.815 0 01-5.001-1.368l-.359-.213-3.761.888.937-3.668-.234-.376A9.844 9.844 0 012.18 12c0-5.413 4.407-9.818 9.82-9.818 5.414 0 9.82 4.405 9.82 9.818 0 5.414-4.406 9.818-9.82 9.818z"/></svg>
+            WhatsApp
+          </a>
+        {% endif %}
+        {% if service.email %}
+          <a href="mailto:{{ service.email }}" class="btn btn--outline btn--block">✉ Send Email</a>
+        {% endif %}
+        {% if not service.phone and not service.email and not service.provider.whatsapp_no %}
+          <a href="{% url 'users:provider_detail' service.provider.pk %}" class="btn btn--primary btn--block">Contact Provider</a>
+        {% endif %}
+      </div>
+
+      <!-- Provider card -->
+      <div class="card" style="padding:20px;margin-bottom:16px">
+        <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:14px;font-weight:600">About the Provider</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--accent);display:grid;place-items:center;font-weight:700;font-size:1.1rem;color:#fff">
+            {% if service.provider.avatar %}
+              <img src="{{ service.provider.avatar.url }}" style="width:100%;height:100%;object-fit:cover" alt="" />
+            {% else %}
+              {{ service.provider.username|first|upper }}
+            {% endif %}
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem">{{ service.provider.get_full_name|default:service.provider.username }}</div>
+            {% if service.provider.phone_verified %}<div style="font-size:0.72rem;color:var(--success);font-weight:600">✓ Verified Provider</div>{% endif %}
+          </div>
+        </div>
+        {% if service.provider.bio %}
+          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px;line-height:1.6">{{ service.provider.bio|truncatechars:100 }}</p>
+        {% endif %}
+        {% if service.provider.city %}
+          <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px">📍 {{ service.provider.city }}{% if service.provider.state %}, {{ service.provider.state }}{% endif %}</div>
+        {% endif %}
+        <a href="{% url 'users:provider_detail' service.provider.pk %}" class="btn btn--outline btn--block btn--sm">View Full Profile</a>
+      </div>
+
+      <!-- Details card -->
+      <div class="card" style="padding:20px">
+        <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:14px;font-weight:600">Service Details</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:0.85rem">
+          {% if service.address %}
+            <div style="display:flex;gap:8px;color:var(--text-secondary)"><span></span><span>{{ service.address }}</span></div>
+          {% endif %}
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-muted)">Category</span>
+            <span>{{ service.category.icon }} {{ service.category.name }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-muted)">Price type</span>
+            <span>{{ service.get_price_type_display }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-muted)">Listed</span>
+            <span>{{ service.created_at|date:"M d, Y" }}</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

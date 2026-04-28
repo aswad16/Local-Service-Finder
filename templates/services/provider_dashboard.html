@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Provider Dashboard — LocalServe{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+  <div class="container">
+    <div class="dashboard-header__inner">
+      <div>
+        <div class="dashboard-title">Provider Dashboard</div>
+        <div class="dashboard-sub">Welcome back, {{ request.user.get_full_name|default:request.user.username }}</div>
+      </div>
+      <a href="{% url 'services:service_create' %}" class="btn btn--primary">+ Add New Service</a>
+    </div>
+  </div>
+</div>
+
+<div class="container section--sm">
+  <!-- KPI Row -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-card--accent">
+      <div class="kpi-card__label">Total Services</div>
+      <div class="kpi-card__value" data-count="{{ stats.total }}">{{ stats.total }}</div>
+      <div class="kpi-card__sub">All time</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__label">Active Listings</div>
+      <div class="kpi-card__value" data-count="{{ stats.active }}">{{ stats.active }}</div>
+      <div class="kpi-card__sub">Visible to customers</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__label">Total Views</div>
+      <div class="kpi-card__value" data-count="{{ stats.total_views }}">{{ stats.total_views }}</div>
+      <div class="kpi-card__sub">Across all services</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__label">Reviews</div>
+      <div class="kpi-card__value" data-count="{{ stats.total_reviews }}">{{ stats.total_reviews }}</div>
+      <div class="kpi-card__sub">Customer feedback</div>
+    </div>
+  </div>
+
+  <!-- Services Table -->
+  <div class="section__header" style="margin-bottom:16px">
+    <h2 class="section__title">My <span>Services</span></h2>
+    <a href="{% url 'services:service_create' %}" class="btn btn--outline btn--sm">+ New</a>
+  </div>
+
+  {% if services %}
+    <div class="table-wrapper">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>City</th>
+            <th>Views</th>
+            <th>Reviews</th>
+            <th>Rating</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for service in services %}
+            <tr>
+              <td>
+                <a href="{% url 'services:service_detail' service.slug %}" class="table__title">{{ service.title|truncatechars:40 }}</a>
+              </td>
+              <td>{{ service.category.icon }} {{ service.category.name }}</td>
+              <td style="color:var(--accent-lite);font-weight:600">₹{{ service.price }}</td>
+              <td>{{ service.city }}</td>
+              <td>{{ service.views_count }}</td>
+              <td>{{ service.review_cnt|default:0 }}</td>
+              <td>
+                {% if service.avg_r %}
+                  <span style="color:var(--gold)">&#9733;</span> {{ service.avg_r|floatformat:1 }}
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if service.is_active %}
+                  <span class="badge badge--green">Active</span>
+                {% else %}
+                  <span class="badge badge--red">Inactive</span>
+                {% endif %}
+                {% if service.is_featured %}
+                  <span class="badge badge--gold">Featured</span>
+                {% endif %}
+              </td>
+              <td>
+                <div style="display:flex;gap:6px">
+                  <a href="{% url 'services:service_edit' service.slug %}" class="btn btn--outline btn--sm">Edit</a>
+                  <form method="post" action="{% url 'services:service_delete' service.slug %}" onsubmit="return confirm('Delete this service?')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--danger btn--sm">Del</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state__icon"></div>
+      <div class="empty-state__title">No services yet</div>
+      <div class="empty-state__desc">Create your first service listing to start getting customers.</div>
+      <a href="{% url 'services:service_create' %}" class="btn btn--primary">+ Add Your First Service</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

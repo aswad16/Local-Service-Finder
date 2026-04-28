@@ -1,0 +1,45 @@
+{% extends 'adminpanel/base_admin.html' %}
+{% block title %}Reviews{% endblock %}
+{% block page_title %}Review Management{% endblock %}
+{% block breadcrumb %}Admin / Reviews{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+  <div class="admin-panel__header">
+    <div class="admin-panel__title"> All Reviews ({{ reviews.count }})</div>
+  </div>
+  <table class="admin-table">
+    <thead>
+      <tr><th>Reviewer</th><th>Service</th><th>Rating</th><th>Comment</th><th>Date</th><th>Verified</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for review in reviews %}
+        <tr>
+          <td class="td-main">{{ review.reviewer.username }}</td>
+          <td>
+            <a href="{% url 'services:service_detail' review.service.slug %}" target="_blank" style="color:var(--text-secondary)">
+              {{ review.service.title|truncatechars:30 }}
+            </a>
+          </td>
+          <td>
+            <span style="color:var(--gold);font-size:1rem">
+              {% for i in "12345" %}{% if forloop.counter <= review.rating %}&#9733;{% else %}<span style="color:var(--text-muted)">&#9733;</span>{% endif %}{% endfor %}
+            </span>
+          </td>
+          <td style="color:var(--text-muted);max-width:200px">{{ review.comment|truncatechars:60 }}</td>
+          <td style="white-space:nowrap;font-size:0.8rem">{{ review.created_at|date:"M d, Y" }}</td>
+          <td>{% if review.is_verified %}<span class="badge badge--green"> Yes</span>{% else %}<span class="badge badge--gray">No</span>{% endif %}</td>
+          <td>
+            <form method="post" action="{% url 'adminpanel:review_delete' review.pk %}" onsubmit="return confirm('Delete this review?')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn--danger btn--sm">Delete</button>
+            </form>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">No reviews yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
